@@ -132,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     horizontal: 50,
                     vertical: 15,
                   ),
-                  textStyle: const TextStyle(
+                  textStyle: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
