@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart'; // Asegúrate de que esta línea esté presente
+import 'package:sqflite/sqflite.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'database_helper.dart'; // Asegúrate de importar tu archivo de base de datos
+import 'welcome_screen.dart'; // Asegúrate de importar tu archivo de pantalla de bienvenida
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -36,10 +39,30 @@ class _LoginScreenState extends State<LoginScreen> {
     final Map<String, dynamic> responseData = json.decode(response.body);
 
     if (response.statusCode == 200 && responseData['status'] == 'ok') {
-      final String token = responseData['data'];
+      final token = responseData['data'];
+      final db = await DatabaseHelper().database;
+
+      // Insertar token en la base de datos
+      await db.insert('sessions', {
+        'token': token,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      // Persistir el token en SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', token);
-      Navigator.pushReplacementNamed(context, '/projects');
+
+      // Verificar el token en la base de datos
+      await verifyTokenInDatabase();
+
+      // Verificar el token en SharedPreferences
+      await verifyTokenInSharedPreferences();
+
+      // Redirigir a la pantalla de bienvenida
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => WelcomeScreen()),
+      );
     } else {
       showDialog(
         context: context,
@@ -143,5 +166,30 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+}
+
+// Funciones de verificación
+
+Future<void> verifyTokenInDatabase() async {
+  final db = await DatabaseHelper().database;
+  List<Map> result = await db.query('sessions', columns: ['token', 'created_at']);
+
+  if (result.isNotEmpty) {
+    print('Token found in database: ${result.first['token']}');
+    print('Token created at: ${result.first['created_at']}');
+  } else {
+    print('No token found in database.');
+  }
+}
+
+Future<void> verifyTokenInSharedPreferences() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? token = prefs.getString('token');
+
+  if (token != null) {
+    print('Token found in SharedPreferences: $token');
+  } else {
+    print('No token found in SharedPreferences.');
   }
 }
