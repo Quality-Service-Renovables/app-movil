@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'database_helper.dart';
+import 'login_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   @override
@@ -41,41 +43,63 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         setState(() {
           _isLoading = false;
         });
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: Text('Error'),
-              content: Text('Error: Datos no encontrados en la respuesta'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
+        _showErrorDialog('Datos no encontrados en la respuesta');
       }
     } else {
       setState(() {
         _isLoading = false;
       });
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('Error'),
-            content: Text('Error: ${response.reasonPhrase}'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('OK'),
-              ),
-            ],
-          );
-        },
+      _showErrorDialog('Error: ${response.reasonPhrase}');
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    final response = await http.post(
+      Uri.parse('https://qsr.mx/api/session/logout'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'token': token!,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final db = await DatabaseHelper().database;
+      await db.update('sessions', {'expired_at': DateTime.now().toIso8601String()}, where: 'token = ?', whereArgs: [token]);
+
+      // Limpiar el token de SharedPreferences
+      await prefs.remove('token');
+
+      // Redirigir a la pantalla de login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
       );
+    } else {
+      _showErrorDialog('Error al cerrar sesión: ${response.reasonPhrase}');
     }
   }
 
@@ -84,6 +108,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Estado de Proyectos'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: _logout,
+          ),
+        ],
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())

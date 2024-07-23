@@ -1,5 +1,8 @@
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'dart:io';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -18,19 +21,20 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'app_database.db');
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE sessions(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            token TEXT,
-            created_at TEXT
-          )
-        ''');
-      },
-    );
+    // Obtén la ruta de la base de datos
+    Directory documentsDirectory = await getApplicationDocumentsDirectory();
+    String path = join(documentsDirectory.path, 'qsr.sqlite');
+
+    // Verifica si la base de datos existe
+    bool dbExists = await databaseExists(path);
+
+    if (!dbExists) {
+      // Copia la base de datos desde los assets a la ubicación de la aplicación
+      ByteData data = await rootBundle.load(join('assets', 'databases', 'qsr.sqlite'));
+      List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+      await File(path).writeAsBytes(bytes);
+    }
+
+    return await openDatabase(path);
   }
 }
