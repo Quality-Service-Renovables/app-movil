@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'database_helper.dart'; // Asegúrate de importar tu archivo de base de datos
-import 'welcome_screen.dart'; // Asegúrate de importar tu archivo de pantalla de bienvenida
+import 'database_helper.dart';
+import 'welcome_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -15,6 +15,38 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkForExistingToken();
+  }
+
+  Future<void> _checkForExistingToken() async {
+    final db = await DatabaseHelper().database;
+
+    // Consulta para verificar que el token existe y que expired_at es null
+    List<Map> result = await db.query(
+      'sessions',
+      columns: ['token', 'expired_at'], // Incluimos 'expired_at' para depuración
+      where: 'expired_at IS NULL',
+    );
+
+    // Imprimir el resultado de la consulta
+    print('Resultado de la consulta de token: $result');
+
+    if (result.isNotEmpty) {
+      // Si hay un token válido, redirigir a la pantalla de bienvenida
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => WelcomeScreen()),
+      );
+    } else {
+      // Si no hay un token válido, imprimir un mensaje de depuración
+      print('No se encontró un token válido o el campo expired_at no es NULL.');
+    }
+  }
+
 
   Future<void> _login() async {
     setState(() {
@@ -51,12 +83,6 @@ class _LoginScreenState extends State<LoginScreen> {
       // Persistir el token en SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', token);
-
-      // Verificar el token en la base de datos
-      await verifyTokenInDatabase();
-
-      // Verificar el token en SharedPreferences
-      await verifyTokenInSharedPreferences();
 
       // Redirigir a la pantalla de bienvenida
       Navigator.pushReplacement(
@@ -101,15 +127,6 @@ class _LoginScreenState extends State<LoginScreen> {
               Image.asset(
                 'assets/img/qsr_logo.png',
                 height: 100,
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Quality Service Renovables',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[900],
-                ),
               ),
               SizedBox(height: 20),
               TextField(
@@ -166,30 +183,5 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
-  }
-}
-
-// Funciones de verificación
-
-Future<void> verifyTokenInDatabase() async {
-  final db = await DatabaseHelper().database;
-  List<Map> result = await db.query('sessions', columns: ['token', 'created_at']);
-
-  if (result.isNotEmpty) {
-    print('Token found in database: ${result.first['token']}');
-    print('Token created at: ${result.first['created_at']}');
-  } else {
-    print('No token found in database.');
-  }
-}
-
-Future<void> verifyTokenInSharedPreferences() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? token = prefs.getString('token');
-
-  if (token != null) {
-    print('Token found in SharedPreferences: $token');
-  } else {
-    print('No token found in SharedPreferences.');
   }
 }

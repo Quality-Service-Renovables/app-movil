@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'logout_service.dart'; // Importa el servicio de logout
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'database_helper.dart';
-import 'login_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   @override
@@ -71,38 +70,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 
-  Future<void> _logout() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
-    final response = await http.post(
-      Uri.parse('https://qsr.mx/api/session/logout'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'token': token!,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final db = await DatabaseHelper().database;
-      await db.update('sessions', {'expired_at': DateTime.now().toIso8601String()}, where: 'token = ?', whereArgs: [token]);
-
-      // Limpiar el token de SharedPreferences
-      await prefs.remove('token');
-
-      // Redirigir a la pantalla de login
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
-    } else {
-      _showErrorDialog('Error al cerrar sesión: ${response.reasonPhrase}');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -111,7 +78,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
-            onPressed: _logout,
+            onPressed: () => LogoutService.logout(context), // Utiliza el servicio de logout
           ),
         ],
       ),
