@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'logout_service.dart'; // Importa el servicio de logout
+import 'package:flutter_html/flutter_html.dart';
 
 class ProjectsScreen extends StatelessWidget {
   final List<dynamic> projects;
@@ -32,7 +33,9 @@ class ProjectsScreen extends StatelessWidget {
             margin: EdgeInsets.symmetric(vertical: 10.0),
             child: ListTile(
               title: Text(projectName),
-              subtitle: Text(projectDescription),
+              subtitle: Html(
+                data: projectDescription,
+              ),
             ),
           );
         },
