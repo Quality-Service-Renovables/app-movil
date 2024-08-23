@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'logout_service.dart'; // Importa el servicio de logout
 import 'package:flutter_html/flutter_html.dart';
+import 'inspection_form_screen.dart';
 
 class ProjectsScreen extends StatelessWidget {
   final List<dynamic> projects;
@@ -26,6 +27,8 @@ class ProjectsScreen extends StatelessWidget {
         itemBuilder: (context, index) {
           final projectName = projects[index]['project_name'];
           final projectDescription = projects[index]['description'];
+          final ctInspectionUuid = projects[index]['ct_inspection_uuid']; // Recupera el UUID
+
           return Card(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15.0),
@@ -36,6 +39,17 @@ class ProjectsScreen extends StatelessWidget {
               subtitle: Html(
                 data: projectDescription,
               ),
+              onTap: () {
+                // Navega a la pantalla de inspección al hacer tap
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => InspectionFormScreen(
+                      ctInspectionUuid: ctInspectionUuid,
+                    ),
+                  ),
+                );
+              },
             ),
           );
         },
