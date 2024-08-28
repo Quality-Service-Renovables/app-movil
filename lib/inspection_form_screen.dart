@@ -1,138 +1,146 @@
 import 'package:flutter/material.dart';
-import 'dart:convert'; // Para manejar JSON
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:sqflite/sqflite.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'database_helper.dart';
 
-class InspectionFormScreen extends StatelessWidget {
+class InspectionFormScreen extends StatefulWidget {
   final String ctInspectionUuid;
 
-  InspectionFormScreen({required this.ctInspectionUuid});
+  const InspectionFormScreen({super.key, required this.ctInspectionUuid});
 
-  // Ejemplo de JSON simulado (en producción esto vendrá de tu API)
-  final String jsonResponse = '''{
-    "status": "ok",
-    "message": "Records retrieved successfully.",
-    "data": {
-      "sections": {
-        "inspeccion_externa": {
-          "section_details": {
-            "ct_inspection_section_uuid": "3014a180-a552-4072-844b-b70d07c0aea1",
-            "ct_inspection_section": "Inspección Externa",
-            "ct_inspection_section_code": "inspeccion_externa",
-            "ct_inspection_relation_id": null,
-            "created_at": "2024-08-23T03:14:37.000000Z",
-            "updated_at": "2024-08-23T03:14:37.000000Z",
-            "deleted_at": null
-          },
-          "fields": [],
-          "sub_sections": [
-            {
-              "ct_inspection_section_uuid": "3dc6ea35-2109-456e-a03e-a36ab381b0d0",
-              "ct_inspection_section": "Sistema Refrigeración",
-              "ct_inspection_section_code": "sistema_refrigeracion",
-              "ct_inspection_relation_id": 1,
-              "created_at": "2024-08-23T03:14:37.000000Z",
-              "updated_at": "2024-08-23T03:14:37.000000Z",
-              "deleted_at": null,
-              "fields": {
-                "estado_intercambiador": {
-                  "ct_inspection_form_uuid": "a08e05d9-c954-4db4-beca-3dd81b4b054c",
-                  "ct_inspection_form": "Estado del Intercambiador",
-                  "ct_inspection_form_code": "estado_intercambiador",
-                  "required": 1,
-                  "created_at": "2024-08-23T03:14:37.000000Z",
-                  "updated_at": "2024-08-23T03:14:37.000000Z",
-                  "deleted_at": null,
-                  "result": null
-                },
-                "funcionamiento_ventiladores": {
-                  "ct_inspection_form_uuid": "a07024e0-a41e-455c-920e-304b3cfb00ad",
-                  "ct_inspection_form": "Funcionamiento de Ventiladores",
-                  "ct_inspection_form_code": "funcionamiento_ventiladores",
-                  "required": 1,
-                  "created_at": "2024-08-23T03:14:37.000000Z",
-                  "updated_at": "2024-08-23T03:14:37.000000Z",
-                  "deleted_at": null,
-                  "result": null
-                }
-              }
-            }
-          ]
-        }
-      }
+  @override
+  _InspectionFormScreenState createState() => _InspectionFormScreenState();
+}
+
+class _InspectionFormScreenState extends State<InspectionFormScreen> {
+  String? formJson;
+  String? message;
+  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _getFormInspection(widget.ctInspectionUuid);
+  }
+
+  Future<void> _getFormInspection(String ctInspectionUuid) async {
+    message = 'Procesando, espere...';
+    // Verifica el estado de conexión
+    final hasConnection = await _checkInternetConnection();
+    final db = await DatabaseHelper().database;
+    // Si existe conexión a internet activa, actualiza el formulario
+    if (hasConnection) {
+      message = 'Actualizando formulario';
+      await _updateFormInspection(db, widget.ctInspectionUuid);
     }
-  }''';
+    // Recupera la información del formulario
+    await _getFormFromDatabase(db, ctInspectionUuid);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error de inicio de sesión'),
+          content: Text(responseData['message'] ?? 'Error desconocido'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<bool> _checkInternetConnection() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    return connectivityResult != ConnectivityResult.none;
+  }
+
+  Future<void> _updateFormInspection(Database db, String ctInspectionUuid) async {
+    // Get token application
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    // Validate connection
+    print('Existe conexión y se debe actualizar el json: $ctInspectionUuid');
+    final response = await http.get(Uri.parse('https://qsr.mx/api/inspection/forms/get-form/$ctInspectionUuid'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    //final jsonResponse = json.decode(response.body);
+    final jsonResponse = json.decode(response.body);
+
+    if (response.statusCode == 200) {
+      final data = jsonResponse['data'];
+      final now = DateTime.now().toIso8601String();
+
+      await db.insert(
+        'inspection_forms',
+        {
+          'ct_inspection_uuid': ctInspectionUuid,
+          'json_form': jsonEncode(data),
+          'created_at': now,
+          'updated_at': now,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } else {
+      message = 'Formulario no disponible';
+    }
+
+  }
+
+  Future<void> _getFormFromDatabase(Database db, String ctInspectionUuid) async {
+    final List<Map<String, dynamic>> maps = await db.query(
+      'inspection_forms',
+      columns: ['json_form'],
+      where: 'ct_inspection_uuid = ?',
+      whereArgs: [ctInspectionUuid],
+    );
+
+    if (maps.isNotEmpty) {
+      final Map<String, dynamic> firstRecord = maps.first;
+      final jsonFormDatabase = firstRecord['json_form'];
+
+      // Decodifica el string JSON en un mapa
+      final Map<String, dynamic> jsonFormData = jsonDecode(jsonFormDatabase);
+
+      // Ahora puedes acceder a los datos dentro de jsonFormData
+      final Map<String, dynamic> sections = jsonFormData['sections'];
+
+      print('Se encontró información en la base de datos $sections');
+      formJson = jsonFormDatabase;
+      message = 'Información recuperada...';
+      //return maps.first;
+    } else {
+      print('No se encontró información en la base de datos');
+      message = 'No fue posible recuperar el formulario, revise su conexión';
+      //return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Decodificar el JSON
-    final Map<String, dynamic> data = json.decode(jsonResponse)['data'];
-
     return Scaffold(
+      key: _scaffoldMessengerKey,
       appBar: AppBar(
-        title: Text('Inspection Form'),
+        title: const Text('Inspección'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ListView(
-          children: _buildSections(data['sections']),
-        ),
-      ),
-    );
-  }
-
-  List<Widget> _buildSections(Map<String, dynamic> sections) {
-    List<Widget> sectionWidgets = [];
-
-    sections.forEach((key, section) {
-      sectionWidgets.add(_buildSection(section));
-    });
-
-    return sectionWidgets;
-  }
-
-  Widget _buildSection(Map<String, dynamic> section) {
-    List<Widget> subsectionWidgets = [];
-
-    // Si la sección tiene subsecciones
-    if (section['sub_sections'] != null) {
-      section['sub_sections'].forEach((subsection) {
-        subsectionWidgets.add(_buildSubsection(subsection));
-      });
-    }
-
-    return Card(
-      child: ExpansionTile(
-        title: Text(section['section_details']['ct_inspection_section']),
-        children: subsectionWidgets,
-      ),
-    );
-  }
-
-  Widget _buildSubsection(Map<String, dynamic> subsection) {
-    List<Widget> fieldWidgets = [];
-
-    // Si la subsección tiene campos
-    if (subsection['fields'] != null) {
-      subsection['fields'].forEach((key, field) {
-        fieldWidgets.add(_buildField(field));
-      });
-    }
-
-    return Card(
-      child: ExpansionTile(
-        title: Text(subsection['ct_inspection_section']),
-        children: fieldWidgets,
-      ),
-    );
-  }
-
-  Widget _buildField(Map<String, dynamic> field) {
-    return ListTile(
-      title: Text(field['ct_inspection_form']),
-      subtitle: Text('Código: ${field['ct_inspection_form_code']}'),
-      trailing: Icon(
-        field['required'] == 1 ? Icons.check_circle : Icons.circle,
-        color: field['required'] == 1 ? Colors.green : Colors.red,
-      ),
-    );
+      body: formJson != null
+          ? SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Text(formJson ?? '', style: const TextStyle(fontSize: 16.0)),
+      )
+          : SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(message ?? '', style: const TextStyle(fontSize: 16.0)),
+    ));
   }
 }
