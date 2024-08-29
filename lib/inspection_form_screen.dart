@@ -38,28 +38,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     }
     // Recupera la información del formulario
     await _getFormFromDatabase(db, ctInspectionUuid);
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Error de inicio de sesión'),
-          content: Text(responseData['message'] ?? 'Error desconocido'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<bool> _checkInternetConnection() async {
-    final connectivityResult = await Connectivity().checkConnectivity();
-    return connectivityResult != ConnectivityResult.none;
   }
 
   Future<void> _updateFormInspection(Database db, String ctInspectionUuid) async {
@@ -126,6 +104,30 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     }
   }
 
+  Future<bool> _checkInternetConnection() async {
+    // Primero, verifica si el dispositivo está conectado a una red.
+    final connectivityResult = await Connectivity().checkConnectivity();
+
+    if (connectivityResult != ConnectivityResult.none) {
+      // Si está conectado a una red, realiza una solicitud HTTP a un servidor confiable.
+      try {
+        final response = await http.get(Uri.parse('https://qsr.mx')).timeout(const Duration(seconds: 5));
+
+        // Si la solicitud es exitosa y el código de estado es 200, hay acceso a Internet.
+        if (response.statusCode == 200) {
+          return true;
+        } else {
+          return false;
+        }
+      } catch (e) {
+        // Si ocurre algún error (por ejemplo, timeout), se considera que no hay acceso a Internet.
+        return false;
+      }
+    } else {
+      // Si no está conectado a ninguna red, devuelve false.
+      return false;
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -1,8 +1,12 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
+import 'database_helper.dart';
 import 'logout_service.dart'; // Importa el servicio de logout
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'helpers.dart'; // Importa el helper
 
 class WelcomeScreen extends StatefulWidget {
   @override
@@ -20,8 +24,48 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 
   Future<void> _fetchData() async {
+    // Verifica el estado de conexión
+    final hasConnection = await _checkInternetConnection();
+    final db = await DatabaseHelper().database;
+
+    // Si existe conexión a internet activa, actualiza el formulario
+    if (hasConnection) {
+      await _updateSyncTable(db);
+    }
+
+    await _getStatus(db);
+  }
+
+  Future<bool> _checkInternetConnection() async {
+    // Primero, verifica si el dispositivo está conectado a una red.
+    final connectivityResult = await Connectivity().checkConnectivity();
+
+    if (connectivityResult != ConnectivityResult.none) {
+      // Si está conectado a una red, realiza una solicitud HTTP a un servidor confiable.
+      try {
+        final response = await http.get(Uri.parse('https://qsr.mx')).timeout(Duration(seconds: 5));
+
+        // Si la solicitud es exitosa y el código de estado es 200, hay acceso a Internet.
+        if (response.statusCode == 200) {
+          return true;
+        } else {
+          return false;
+        }
+      } catch (e) {
+        // Si ocurre algún error (por ejemplo, timeout), se considera que no hay acceso a Internet.
+        return false;
+      }
+    } else {
+      // Si no está conectado a ninguna red, devuelve false.
+      return false;
+    }
+  }
+
+
+  Future<void> _updateSyncTable(Database db) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
+    final now = DateTime.now().toIso8601String();
 
     final response = await http.get(
       Uri.parse('https://qsr.mx/api/application/sync'),
@@ -34,58 +78,88 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       final responseData = json.decode(response.body);
 
       if (responseData['data'] != null && responseData['data']['status'] != null) {
-        setState(() {
-          _statusList = responseData['data']['status'];
-          _isLoading = false;
-        });
+        await db.insert(
+          'sync',
+          {
+            'code': 'main',
+            'status': jsonEncode(responseData['data']['status']),
+            'created_at': now,
+            'updated_at': now,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       } else {
         setState(() {
           _isLoading = false;
         });
-        _showErrorDialog('Datos no encontrados en la respuesta');
+        showErrorDialog(
+          context,
+          'Error de Conexión',
+          ['Datos no encontrados en la respuesta.'],
+        );
       }
     } else {
       setState(() {
         _isLoading = false;
       });
-      _showErrorDialog('Error: ${response.reasonPhrase}');
+      showErrorDialog(
+        context,
+        'Error de Conexión',
+        ['Error: ${response.reasonPhrase}'],
+      );
     }
   }
 
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Error'),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
+  Future<void> _getStatus(Database db) async {
+    final List<Map<String, dynamic>> maps = await db.query(
+      'sync',
+      columns: ['status'],
+      where: 'code = ?', // Cláusula WHERE
+      whereArgs: ['main'], // Valor para el marcador de posición
     );
+
+    if (maps.isNotEmpty) {
+      final Map<String, dynamic> firstRecord = maps.first;
+
+      // Decodifica el string JSON en un mapa o lista
+      final List<dynamic> jsonStatus = jsonDecode(firstRecord['status']);
+
+      setState(() {
+        _statusList = jsonStatus;
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+      showErrorDialog(
+        context,
+        'QSR no disponible',
+        [
+          'No se pudo descargar la información de sus asignaciones',
+          'Revise su conexión a internet',
+          'Si el problema persiste, contacte a su administrador.',
+        ],
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Estado de Proyectos'),
+        title: const Text('Estado de Proyectos'),
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: const Icon(Icons.logout),
             onPressed: () => LogoutService.logout(context), // Utiliza el servicio de logout
           ),
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
-        padding: EdgeInsets.all(10),
+        padding: const EdgeInsets.all(10),
         itemCount: _statusList.length,
         itemBuilder: (context, index) {
           final statusDescription = _statusList[index]['description'];
@@ -95,7 +169,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15.0),
             ),
-            margin: EdgeInsets.symmetric(vertical: 10.0),
+            margin: const EdgeInsets.symmetric(vertical: 10.0),
             child: ListTile(
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -107,14 +181,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     ),
                   ),
                   Container(
-                    padding: EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: Colors.blue,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '$projectCount',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
