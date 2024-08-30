@@ -3,8 +3,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'database_helper.dart';
+import 'logout_service.dart'; // Importa el servicio de logout
+import 'helpers.dart';
 
 class InspectionFormScreen extends StatefulWidget {
   final String ctInspectionUuid;
@@ -16,8 +17,9 @@ class InspectionFormScreen extends StatefulWidget {
 }
 
 class _InspectionFormScreenState extends State<InspectionFormScreen> {
-  String? formJson;
-  String? message;
+  Map<String, dynamic> _inspectionData = {};
+  bool _isLoading = true;
+
   final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
   @override
@@ -27,24 +29,17 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   Future<void> _getFormInspection(String ctInspectionUuid) async {
-    message = 'Procesando, espere...';
-    // Verifica el estado de conexión
-    final hasConnection = await _checkInternetConnection();
+    final hasConnection = await checkInternetConnection();
     final db = await DatabaseHelper().database;
-    // Si existe conexión a internet activa, actualiza el formulario
     if (hasConnection) {
-      message = 'Actualizando formulario';
       await _updateFormInspection(db, widget.ctInspectionUuid);
     }
-    // Recupera la información del formulario
     await _getFormFromDatabase(db, ctInspectionUuid);
   }
 
   Future<void> _updateFormInspection(Database db, String ctInspectionUuid) async {
-    // Get token application
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
-    // Validate connection
     print('Existe conexión y se debe actualizar el json: $ctInspectionUuid');
     final response = await http.get(Uri.parse('https://qsr.mx/api/inspection/forms/get-form/$ctInspectionUuid'),
       headers: {
@@ -52,7 +47,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       },
     );
 
-    //final jsonResponse = json.decode(response.body);
     final jsonResponse = json.decode(response.body);
 
     if (response.statusCode == 200) {
@@ -70,9 +64,15 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } else {
-      message = 'Formulario no disponible';
+      showErrorDialog(
+        context,
+        'QSR no disponible',
+        [
+          'No fue posible recuperar la información',
+          'Información no actualizada'
+        ],
+      );
     }
-
   }
 
   Future<void> _getFormFromDatabase(Database db, String ctInspectionUuid) async {
@@ -84,65 +84,58 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     );
 
     if (maps.isNotEmpty) {
-      final Map<String, dynamic> firstRecord = maps.first;
-      final jsonFormDatabase = firstRecord['json_form'];
+      final jsonData = jsonDecode(maps.first['json_form']);
+      final Map<String, dynamic> sections = jsonData['sections'] ?? {};
 
-      // Decodifica el string JSON en un mapa
-      final Map<String, dynamic> jsonFormData = jsonDecode(jsonFormDatabase);
-
-      // Ahora puedes acceder a los datos dentro de jsonFormData
-      final Map<String, dynamic> sections = jsonFormData['sections'];
-
-      print('Se encontró información en la base de datos $sections');
-      formJson = jsonFormDatabase;
-      message = 'Información recuperada...';
-      //return maps.first;
+      setState(() {
+        _inspectionData = sections;
+        _isLoading = false;
+      });
     } else {
       print('No se encontró información en la base de datos');
-      message = 'No fue posible recuperar el formulario, revise su conexión';
-      //return null;
+      showErrorDialog(
+        context,
+        'QSR Checklist',
+        [
+          'No se encontró checklist, no es posible continuar.',
+          'Revise se conexión.',
+          'Si el problema persiste contacte al administrador.',
+        ],
+      );
     }
   }
 
-  Future<bool> _checkInternetConnection() async {
-    // Primero, verifica si el dispositivo está conectado a una red.
-    final connectivityResult = await Connectivity().checkConnectivity();
-
-    if (connectivityResult != ConnectivityResult.none) {
-      // Si está conectado a una red, realiza una solicitud HTTP a un servidor confiable.
-      try {
-        final response = await http.get(Uri.parse('https://qsr.mx')).timeout(const Duration(seconds: 5));
-
-        // Si la solicitud es exitosa y el código de estado es 200, hay acceso a Internet.
-        if (response.statusCode == 200) {
-          return true;
-        } else {
-          return false;
-        }
-      } catch (e) {
-        // Si ocurre algún error (por ejemplo, timeout), se considera que no hay acceso a Internet.
-        return false;
-      }
-    } else {
-      // Si no está conectado a ninguna red, devuelve false.
-      return false;
-    }
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldMessengerKey,
       appBar: AppBar(
-        title: const Text('Inspección'),
+        title: const Text('Checklist'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => LogoutService.logout(context), // Utiliza el servicio de logout
+          ),
+        ],
       ),
-      body: formJson != null
-          ? SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Text(formJson ?? '', style: const TextStyle(fontSize: 16.0)),
-      )
-          : SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(message ?? '', style: const TextStyle(fontSize: 16.0)),
-    ));
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+        padding: const EdgeInsets.all(10),
+        children: _inspectionData.entries.map((entry) {
+          final sectionTitle = entry.key;
+          final subsections = entry.value as Map<String, dynamic>;
+
+          return ExpansionTile(
+            title: Text(sectionTitle),
+            children: subsections.entries.map((subsection) {
+              return ListTile(
+                title: Text(subsection.key),
+                subtitle: Text(subsection.value.toString()),
+              );
+            }).toList(),
+          );
+        }).toList(),
+      ),
+    );
   }
 }

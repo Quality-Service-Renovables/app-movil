@@ -25,7 +25,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   Future<void> _fetchData() async {
     // Verifica el estado de conexión
-    final hasConnection = await _checkInternetConnection();
+    final hasConnection = await checkInternetConnection();
     final db = await DatabaseHelper().database;
 
     // Si existe conexión a internet activa, actualiza el formulario
@@ -35,32 +35,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     await _getStatus(db);
   }
-
-  Future<bool> _checkInternetConnection() async {
-    // Primero, verifica si el dispositivo está conectado a una red.
-    final connectivityResult = await Connectivity().checkConnectivity();
-
-    if (connectivityResult != ConnectivityResult.none) {
-      // Si está conectado a una red, realiza una solicitud HTTP a un servidor confiable.
-      try {
-        final response = await http.get(Uri.parse('https://qsr.mx')).timeout(Duration(seconds: 5));
-
-        // Si la solicitud es exitosa y el código de estado es 200, hay acceso a Internet.
-        if (response.statusCode == 200) {
-          return true;
-        } else {
-          return false;
-        }
-      } catch (e) {
-        // Si ocurre algún error (por ejemplo, timeout), se considera que no hay acceso a Internet.
-        return false;
-      }
-    } else {
-      // Si no está conectado a ninguna red, devuelve false.
-      return false;
-    }
-  }
-
 
   Future<void> _updateSyncTable(Database db) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
