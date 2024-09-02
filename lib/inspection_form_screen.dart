@@ -137,6 +137,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                   title: Text(entry.value['section_details']
                       ['ct_inspection_section'] as String),
                   subtitle: Text("Sección"),
+                  textColor: Colors.blueAccent,
+                  collapsedTextColor: Colors.blueAccent,
                   children: <Widget>[
                     // Campos
                     Column(
@@ -151,10 +153,21 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                     // Subsecciones
                     Column(
                       children: subsections.map((subsection) {
+                        final fieldsSub = subsection['fields'] as Map<String, dynamic>;
                         return ExpansionTile(
                           title: Text(
                               subsection['ct_inspection_section'] as String),
                               subtitle: Text("Sub-sección"),
+                          textColor: Colors.blue,
+                          collapsedTextColor: Colors.blue,
+                          // Campos de la subsección
+                          children: fieldsSub.entries.map((fieldSub) {
+                              final field = fieldSub.value;
+                              return ListTile(
+                                title: Text(field['ct_inspection_form']),
+                                subtitle: Text("Campo"),
+                              );
+                            }).toList(),
                         );
                       }).toList(),
                     ),
