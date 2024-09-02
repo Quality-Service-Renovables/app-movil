@@ -20,7 +20,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   Map<String, dynamic> _inspectionData = {};
   bool _isLoading = true;
 
-  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
 
   @override
   void initState() {
@@ -37,11 +38,14 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     await _getFormFromDatabase(db, ctInspectionUuid);
   }
 
-  Future<void> _updateFormInspection(Database db, String ctInspectionUuid) async {
+  Future<void> _updateFormInspection(
+      Database db, String ctInspectionUuid) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     print('Existe conexión y se debe actualizar el json: $ctInspectionUuid');
-    final response = await http.get(Uri.parse('https://qsr.mx/api/inspection/forms/get-form/$ctInspectionUuid'),
+    final response = await http.get(
+      Uri.parse(
+          'https://qsr.mx/api/inspection/forms/get-form/$ctInspectionUuid'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -75,7 +79,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     }
   }
 
-  Future<void> _getFormFromDatabase(Database db, String ctInspectionUuid) async {
+  Future<void> _getFormFromDatabase(
+      Database db, String ctInspectionUuid) async {
     final List<Map<String, dynamic>> maps = await db.query(
       'inspection_forms',
       columns: ['json_form'],
@@ -113,29 +118,50 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => LogoutService.logout(context), // Utiliza el servicio de logout
+            onPressed: () =>
+                LogoutService.logout(context), // Utiliza el servicio de logout
           ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-        padding: const EdgeInsets.all(10),
-        children: _inspectionData.entries.map((entry) {
-          final sectionTitle = entry.key;
-          final subsections = entry.value as Map<String, dynamic>;
+              padding: const EdgeInsets.all(10),
+              // Secciones
+              children: _inspectionData.entries.map((entry) {
+                final fields = entry.value['fields'] as Map<String, dynamic>;
+                final subsections =
+                    entry.value['sub_sections'] as List<dynamic>;
 
-          return ExpansionTile(
-            title: Text(sectionTitle),
-            children: subsections.entries.map((subsection) {
-              return ListTile(
-                title: Text(subsection.key),
-                subtitle: Text(subsection.value.toString()),
-              );
-            }).toList(),
-          );
-        }).toList(),
-      ),
+                return ExpansionTile(
+                  title: Text(entry.value['section_details']
+                      ['ct_inspection_section'] as String),
+                  subtitle: Text("Sección"),
+                  children: <Widget>[
+                    // Campos
+                    Column(
+                      children: fields.entries.map((fieldEntry) {
+                        final field = fieldEntry.value;
+                        return ListTile(
+                          title: Text(field['ct_inspection_form']),
+                          subtitle: Text("Campo"),
+                        );
+                      }).toList(),
+                    ),
+                    // Subsecciones
+                    Column(
+                      children: subsections.map((subsection) {
+                        return ExpansionTile(
+                          title: Text(
+                              subsection['ct_inspection_section'] as String),
+                              subtitle: Text("Sub-sección"),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
     );
   }
 }
