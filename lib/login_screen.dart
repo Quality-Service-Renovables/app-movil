@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:sqflite/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'database_helper.dart';
 import 'welcome_screen.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -32,18 +33,12 @@ class _LoginScreenState extends State<LoginScreen> {
       where: 'expired_at IS NULL',
     );
 
-    // Imprimir el resultado de la consulta
-    print('Resultado de la consulta de token: $result');
-
     if (result.isNotEmpty) {
       // Si hay un token válido, redirigir a la pantalla de bienvenida
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => WelcomeScreen()),
       );
-    } else {
-      // Si no hay un token válido, imprimir un mensaje de depuración
-      print('No se encontró un token válido o el campo expired_at no es NULL.');
     }
   }
 
@@ -94,11 +89,11 @@ class _LoginScreenState extends State<LoginScreen> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Error de inicio de sesión'),
+            title: const Text('Error de inicio de sesión'),
             content: Text(responseData['message'] ?? 'Error desconocido'),
             actions: <Widget>[
               TextButton(
-                child: Text('OK'),
+                child: const Text('OK'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -114,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Inicio de Sesión'),
+        title: const Text('Inicio de Sesión'),
         foregroundColor: Colors.white,
         backgroundColor: Colors.red[900], // Rojo oscuro
       ),
@@ -128,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 'assets/img/qsr_logo.png',
                 height: 100,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
@@ -143,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 cursorColor: Colors.red[900],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               TextField(
                 controller: _passwordController,
                 decoration: InputDecoration(
@@ -159,24 +154,24 @@ class _LoginScreenState extends State<LoginScreen> {
                 obscureText: true,
                 cursorColor: Colors.red[900],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               _isLoading
                   ? CircularProgressIndicator(color: Colors.red[900])
                   : ElevatedButton(
                 onPressed: _login,
-                child: Text('Login'),
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
                   backgroundColor: Colors.grey[800], // Botón gris oscuro
-                  padding: EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: 50,
                     vertical: 15,
                   ),
-                  textStyle: TextStyle(
+                  textStyle: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                child: const Text('Login'),
               ),
             ],
           ),

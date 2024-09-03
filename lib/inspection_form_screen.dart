@@ -20,9 +20,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   Map<String, dynamic> _inspectionData = {};
   bool _isLoading = true;
 
-  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
-      GlobalKey<ScaffoldMessengerState>();
-
   @override
   void initState() {
     super.initState();
@@ -38,14 +35,11 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     await _getFormFromDatabase(db, ctInspectionUuid);
   }
 
-  Future<void> _updateFormInspection(
-      Database db, String ctInspectionUuid) async {
+  Future<void> _updateFormInspection(Database db, String ctInspectionUuid) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
-    print('Existe conexión y se debe actualizar el json: $ctInspectionUuid');
     final response = await http.get(
-      Uri.parse(
-          'https://qsr.mx/api/inspection/forms/get-form/$ctInspectionUuid'),
+      Uri.parse('https://qsr.mx/api/inspection/forms/get-form/$ctInspectionUuid'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -79,8 +73,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     }
   }
 
-  Future<void> _getFormFromDatabase(
-      Database db, String ctInspectionUuid) async {
+  Future<void> _getFormFromDatabase(Database db, String ctInspectionUuid) async {
     final List<Map<String, dynamic>> maps = await db.query(
       'inspection_forms',
       columns: ['json_form'],
@@ -97,7 +90,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         _isLoading = false;
       });
     } else {
-      print('No se encontró información en la base de datos');
       showErrorDialog(
         context,
         'QSR Checklist',
@@ -110,6 +102,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     }
   }
 
+  Future<void> _refreshInspectionData() async {
+    await _getFormInspection(widget.ctInspectionUuid);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -118,62 +114,61 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () =>
-                LogoutService.logout(context), // Utiliza el servicio de logout
+            onPressed: () => LogoutService.logout(context), // Utiliza el servicio de logout
           ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(10),
-              // Secciones
-              children: _inspectionData.entries.map((entry) {
-                final fields = entry.value['fields'] as Map<String, dynamic>;
-                final subsections =
-                    entry.value['sub_sections'] as List<dynamic>;
+          : RefreshIndicator(
+              onRefresh: _refreshInspectionData,
+              child: ListView(
+                padding: const EdgeInsets.all(10),
+                // Secciones
+                children: _inspectionData.entries.map((entry) {
+                  final fields = entry.value['fields'] as Map<String, dynamic>;
+                  final subsections = entry.value['sub_sections'] as List<dynamic>;
 
-                return ExpansionTile(
-                  title: Text(entry.value['section_details']
-                      ['ct_inspection_section'] as String),
-                  subtitle: Text("Sección"),
-                  textColor: Colors.blueAccent,
-                  collapsedTextColor: Colors.blueAccent,
-                  children: <Widget>[
-                    // Campos
-                    Column(
-                      children: fields.entries.map((fieldEntry) {
-                        final field = fieldEntry.value;
-                        return ListTile(
-                          title: Text(field['ct_inspection_form']),
-                          subtitle: Text("Campo"),
-                        );
-                      }).toList(),
-                    ),
-                    // Subsecciones
-                    Column(
-                      children: subsections.map((subsection) {
-                        final fieldsSub = subsection['fields'] as Map<String, dynamic>;
-                        return ExpansionTile(
-                          title: Text(
-                              subsection['ct_inspection_section'] as String),
-                              subtitle: Text("Sub-sección"),
-                          textColor: Colors.blue,
-                          collapsedTextColor: Colors.blue,
-                          // Campos de la subsección
-                          children: fieldsSub.entries.map((fieldSub) {
+                  return ExpansionTile(
+                    title: Text(entry.value['section_details']['ct_inspection_section'] as String),
+                    subtitle: const Text("Sección"),
+                    textColor: Colors.blueAccent,
+                    collapsedTextColor: Colors.blueAccent,
+                    children: <Widget>[
+                      // Campos
+                      Column(
+                        children: fields.entries.map((fieldEntry) {
+                          final field = fieldEntry.value;
+                          return ListTile(
+                            title: Text(field['ct_inspection_form']),
+                            subtitle: const Text("Campo"),
+                          );
+                        }).toList(),
+                      ),
+                      // Subsecciones
+                      Column(
+                        children: subsections.map((subsection) {
+                          final fieldsSub = subsection['fields'] as Map<String, dynamic>;
+                          return ExpansionTile(
+                            title: Text(subsection['ct_inspection_section'] as String),
+                            subtitle: const Text("Sub-sección"),
+                            textColor: Colors.blue,
+                            collapsedTextColor: Colors.blue,
+                            // Campos de la subsección
+                            children: fieldsSub.entries.map((fieldSub) {
                               final field = fieldSub.value;
                               return ListTile(
                                 title: Text(field['ct_inspection_form']),
-                                subtitle: Text("Campo"),
+                                subtitle: const Text("Campo"),
                               );
                             }).toList(),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                );
-              }).toList(),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
             ),
     );
   }

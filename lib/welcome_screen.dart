@@ -1,4 +1,3 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'database_helper.dart';
@@ -9,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'helpers.dart'; // Importa el helper
 
 class WelcomeScreen extends StatefulWidget {
+  const WelcomeScreen({super.key});
+
   @override
   _WelcomeScreenState createState() => _WelcomeScreenState();
 }
@@ -118,6 +119,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     }
   }
 
+  Future<void> _refreshStatus() async {
+    await _fetchData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -132,58 +137,61 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-        padding: const EdgeInsets.all(10),
-        itemCount: _statusList.length,
-        itemBuilder: (context, index) {
-          final statusDescription = _statusList[index]['description'];
-          final projectCount = _statusList[index]['projects'].length;
-          final projects = _statusList[index]['projects'];
-          return Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
-            ),
-            margin: const EdgeInsets.symmetric(vertical: 10.0),
-            child: ListTile(
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      statusDescription,
-                      overflow: TextOverflow.ellipsis,
+          : RefreshIndicator(
+              onRefresh: _refreshStatus,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(10),
+                itemCount: _statusList.length,
+                itemBuilder: (context, index) {
+                  final statusDescription = _statusList[index]['description'];
+                  final projectCount = _statusList[index]['projects'].length;
+                  final projects = _statusList[index]['projects'];
+                  return Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15.0),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '$projectCount',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                    margin: const EdgeInsets.symmetric(vertical: 10.0),
+                    child: ListTile(
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              statusDescription,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.blue,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '$projectCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/projects',
+                          arguments: {
+                            'projects': projects,
+                            'title': statusDescription,
+                          },
+                        );
+                      },
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
-              onTap: () {
-                Navigator.pushNamed(
-                  context,
-                  '/projects',
-                  arguments: {
-                    'projects': projects,
-                    'title': statusDescription,
-                  },
-                );
-              },
             ),
-          );
-        },
-      ),
     );
   }
 }
