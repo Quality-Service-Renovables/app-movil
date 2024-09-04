@@ -73,7 +73,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
               Image.file(image),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text('Close'),
+                child: Text('Cerrar'),
               ),
             ],
           ),
@@ -207,7 +207,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                               subtitle: const Text("Campo"),
                             ),
                             _images.isEmpty
-                                ? Text('No images selected.')
+                                ? Text(
+                                    'No images selected.',
+                                    textAlign: TextAlign.left,
+                                  )
                                 : Wrap(
                                     spacing: 10,
                                     runSpacing: 10,
@@ -269,15 +272,20 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                       );
                                     }),
                                   ),
-                            SizedBox(height: 20),
-                            ElevatedButton(
-                              onPressed: _pickImages,
-                              child: Text('Select Images from Gallery'),
-                            ),
-                            ElevatedButton(
-                              onPressed: _takePhoto,
-                              child: Text('Take Photo with Camera'),
-                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment
+                                  .center, // Esto centra los botones horizontalmente
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.photo_library),
+                                  onPressed: _pickImages,
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.photo_camera),
+                                  onPressed: _takePhoto,
+                                ),
+                              ],
+                            )
                           ]);
                         }).toList(),
                       ),
