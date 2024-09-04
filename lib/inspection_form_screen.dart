@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'database_helper.dart';
 import 'logout_service.dart'; // Importa el servicio de logout
 import 'helpers.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class InspectionFormScreen extends StatefulWidget {
   final String ctInspectionUuid;
@@ -19,11 +21,52 @@ class InspectionFormScreen extends StatefulWidget {
 class _InspectionFormScreenState extends State<InspectionFormScreen> {
   Map<String, dynamic> _inspectionData = {};
   bool _isLoading = true;
+  File? _image;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
     _getFormInspection(widget.ctInspectionUuid);
+  }
+
+  // Método para seleccionar una imagen desde la galería
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? pickedFile = await _picker.pickImage(source: source);
+
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+      });
+    }
+  }
+
+  // Método para eliminar la imagen seleccionada
+  void _removeImage() {
+    setState(() {
+      _image = null;
+    });
+  }
+
+  // Método para mostrar la imagen en un modal
+  void _viewImage() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.file(_image!),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('Close'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _getFormInspection(String ctInspectionUuid) async {
@@ -35,11 +78,13 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     await _getFormFromDatabase(db, ctInspectionUuid);
   }
 
-  Future<void> _updateFormInspection(Database db, String ctInspectionUuid) async {
+  Future<void> _updateFormInspection(
+      Database db, String ctInspectionUuid) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final response = await http.get(
-      Uri.parse('https://qsr.mx/api/inspection/forms/get-form/$ctInspectionUuid'),
+      Uri.parse(
+          'https://qsr.mx/api/inspection/forms/get-form/$ctInspectionUuid'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -73,7 +118,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     }
   }
 
-  Future<void> _getFormFromDatabase(Database db, String ctInspectionUuid) async {
+  Future<void> _getFormFromDatabase(
+      Database db, String ctInspectionUuid) async {
     final List<Map<String, dynamic>> maps = await db.query(
       'inspection_forms',
       columns: ['json_form'],
@@ -114,7 +160,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => LogoutService.logout(context), // Utiliza el servicio de logout
+            onPressed: () =>
+                LogoutService.logout(context), // Utiliza el servicio de logout
           ),
         ],
       ),
@@ -127,10 +174,12 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                 // Secciones
                 children: _inspectionData.entries.map((entry) {
                   final fields = entry.value['fields'] as Map<String, dynamic>;
-                  final subsections = entry.value['sub_sections'] as List<dynamic>;
+                  final subsections =
+                      entry.value['sub_sections'] as List<dynamic>;
 
                   return ExpansionTile(
-                    title: Text(entry.value['section_details']['ct_inspection_section'] as String),
+                    title: Text(entry.value['section_details']
+                        ['ct_inspection_section'] as String),
                     subtitle: const Text("Sección"),
                     textColor: Colors.blueAccent,
                     collapsedTextColor: Colors.blueAccent,
@@ -139,18 +188,82 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                       Column(
                         children: fields.entries.map((fieldEntry) {
                           final field = fieldEntry.value;
-                          return ListTile(
-                            title: Text(field['ct_inspection_form']),
-                            subtitle: const Text("Campo"),
-                          );
+                          return Column(children: [
+                            ListTile(
+                              title: Text(field['ct_inspection_form']),
+                              subtitle: const Text("Campo"),
+                            ),
+                            _image == null
+                                ? Text('No image selected.')
+                                : Stack(
+                                    children: [
+                                      // Imagen seleccionada
+                                      Image.file(
+                                        _image!,
+                                        width: 75,
+                                      ),
+                                      // Botón de eliminación en forma de "X"
+                                      Positioned(
+                                        top: 0,
+                                        right: 0,
+                                        child: GestureDetector(
+                                          onTap: _removeImage,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.red,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            padding: EdgeInsets.all(8),
+                                            child: Icon(
+                                              Icons.close,
+                                              color: Colors.white,
+                                              size: 20,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      // Botón para visualizar la imagen
+                                      Positioned(
+                                        top: 0,
+                                        left: 0,
+                                        child: GestureDetector(
+                                          onTap: _viewImage,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.blue,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            padding: EdgeInsets.all(8),
+                                            child: Icon(
+                                              Icons.zoom_in,
+                                              color: Colors.white,
+                                              size: 20,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                            SizedBox(height: 5),
+                            ElevatedButton(
+                              onPressed: () => _pickImage(ImageSource.gallery),
+                              child: Text('Select Image from Gallery'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => _pickImage(ImageSource.camera),
+                              child: Text('Take Photo with Camera'),
+                            ),
+                          ]);
                         }).toList(),
                       ),
                       // Subsecciones
                       Column(
                         children: subsections.map((subsection) {
-                          final fieldsSub = subsection['fields'] as Map<String, dynamic>;
+                          final fieldsSub =
+                              subsection['fields'] as Map<String, dynamic>;
                           return ExpansionTile(
-                            title: Text(subsection['ct_inspection_section'] as String),
+                            title: Text(
+                                subsection['ct_inspection_section'] as String),
                             subtitle: const Text("Sub-sección"),
                             textColor: Colors.blue,
                             collapsedTextColor: Colors.blue,
