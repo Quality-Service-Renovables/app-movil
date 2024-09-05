@@ -45,29 +45,26 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         _inspectionEvidences[fieldId]['images'] ??= [];
         _inspectionEvidences[fieldId]['images'].addAll(
             pickedFiles.map((pickedFile) => File(pickedFile.path)).toList());
-
-        _images.addAll(
-            pickedFiles.map((pickedFile) => File(pickedFile.path)).toList());
       });
     }
   }
 
   // Método para tomar una foto con la cámara
-  Future<void> _takePhoto() async {
+  Future<void> _takePhoto(String fieldId) async {
     final XFile? pickedFile =
         await _picker.pickImage(source: ImageSource.camera);
 
     if (pickedFile != null) {
       setState(() {
-        _images.add(File(pickedFile.path));
+        _inspectionEvidences[fieldId]['images'].add(File(pickedFile.path));
       });
     }
   }
 
   // Método para eliminar una imagen seleccionada
-  void _removeImage(int index) {
+  void _removeImage(int index, String fieldId) {
     setState(() {
-      _images.removeAt(index);
+      _inspectionEvidences[fieldId]['images'].removeAt(index);
     });
   }
 
@@ -221,7 +218,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                               title: Text(field['ct_inspection_form']),
                               subtitle: const Text("Campo"),
                             ),
-                            _images.isEmpty
+                            _inspectionEvidences[fieldId]?['images'] == null
                                 ? Text(
                                     'No images selected.',
                                     textAlign: TextAlign.left,
@@ -230,12 +227,12 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                     spacing: 10,
                                     runSpacing: 10,
                                     children:
-                                        List.generate(_images.length, (index) {
+                                        List.generate(_inspectionEvidences[fieldId]?['images'].length, (index) {
                                       return Stack(
                                         children: [
                                           // Imagen seleccionada con un tamaño pequeño
                                           Image.file(
-                                            _images[index],
+                                            _inspectionEvidences[fieldId]?['images'][index],
                                             width:
                                                 100, // Ajusta el ancho de las imágenes
                                             height:
@@ -247,7 +244,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                             top: 0,
                                             right: 0,
                                             child: GestureDetector(
-                                              onTap: () => _removeImage(index),
+                                              onTap: () => _removeImage(index, fieldId),
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   color: Colors.red,
@@ -268,7 +265,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                             left: 0,
                                             child: GestureDetector(
                                               onTap: () =>
-                                                  _viewImage(_images[index]),
+                                                  _viewImage(_inspectionEvidences[fieldId]?['images'][index]),
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   color: Colors.blue,
@@ -297,7 +294,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.photo_camera),
-                                  onPressed: _takePhoto,
+                                  onPressed: () => _takePhoto(fieldId),
                                 ),
                               ],
                             )
