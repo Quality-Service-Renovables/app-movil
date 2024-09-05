@@ -22,7 +22,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   Map<String, dynamic> _inspectionData = {};
   Map<String, dynamic> _inspectionEvidences = {};
   bool _isLoading = true;
-  List<File> _images = [];
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -32,39 +31,35 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   // Método para seleccionar múltiples imágenes desde la galería
-  Future<void> _pickImages(String fieldId) async {
+  Future<void> _pickImages(fieldEntry) async {
     final List<XFile>? pickedFiles = await _picker.pickMultiImage();
 
     if (pickedFiles != null) {
       setState(() {
-        _inspectionEvidences[fieldId] ??= {};
-        print("--------INICIO _pickImages--------");
-        print(fieldId);
-        print(_inspectionEvidences[fieldId]);
-        print("--------FIN _pickImages--------");
-        _inspectionEvidences[fieldId]['images'] ??= [];
-        _inspectionEvidences[fieldId]['images'].addAll(
-            pickedFiles.map((pickedFile) => File(pickedFile.path)).toList());
+          fieldEntry.value['images'] ??= [];
+          fieldEntry.value['images'].addAll(
+          pickedFiles.map((pickedFile) => File(pickedFile.path)).toList());
       });
     }
   }
 
   // Método para tomar una foto con la cámara
-  Future<void> _takePhoto(String fieldId) async {
+  Future<void> _takePhoto(fieldEntry) async {
     final XFile? pickedFile =
         await _picker.pickImage(source: ImageSource.camera);
 
     if (pickedFile != null) {
       setState(() {
-        _inspectionEvidences[fieldId]['images'].add(File(pickedFile.path));
+        fieldEntry.value['images'] ??= [];
+        fieldEntry.value['images'].add(File(pickedFile.path));
       });
     }
   }
 
   // Método para eliminar una imagen seleccionada
-  void _removeImage(int index, String fieldId) {
+  void _removeImage(int index, fieldEntry) {
     setState(() {
-      _inspectionEvidences[fieldId]['images'].removeAt(index);
+      fieldEntry.value['images'].removeAt(index);
     });
   }
 
@@ -197,6 +192,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                   final subsections =
                       entry.value['sub_sections'] as List<dynamic>;
 
+                  /*fields.entries.map((fieldEntry){
+                    fieldEntry.value['images'] = [];
+                  }).toList();*/
+
                   return ExpansionTile(
                     title: Text(entry.value['section_details']
                         ['ct_inspection_section'] as String),
@@ -209,16 +208,17 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                         children: fields.entries.map((fieldEntry) {
                           final field = fieldEntry.value;
                           final String fieldId = fieldEntry.key;
-                          print("FieldId: "+ fieldId);
-                          print("_inspectionEvidences images:");
-                          print(_inspectionEvidences[fieldId]?['images']);
+                          print("fieldEntry:");
+                          print(fieldEntry);
+                          print("images field:");
+                          print(fieldEntry.value['images']);
 
                           return Column(children: [
                             ListTile(
                               title: Text(field['ct_inspection_form']),
                               subtitle: const Text("Campo"),
                             ),
-                            _inspectionEvidences[fieldId]?['images'] == null
+                            fieldEntry.value['images'] == null
                                 ? Text(
                                     'No images selected.',
                                     textAlign: TextAlign.left,
@@ -227,12 +227,12 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                     spacing: 10,
                                     runSpacing: 10,
                                     children:
-                                        List.generate(_inspectionEvidences[fieldId]?['images'].length, (index) {
+                                        List.generate(fieldEntry.value['images'].length, (index) {
                                       return Stack(
                                         children: [
                                           // Imagen seleccionada con un tamaño pequeño
                                           Image.file(
-                                            _inspectionEvidences[fieldId]?['images'][index],
+                                            fieldEntry.value['images'][index],
                                             width:
                                                 100, // Ajusta el ancho de las imágenes
                                             height:
@@ -244,7 +244,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                             top: 0,
                                             right: 0,
                                             child: GestureDetector(
-                                              onTap: () => _removeImage(index, fieldId),
+                                              onTap: () => _removeImage(index, fieldEntry),
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   color: Colors.red,
@@ -265,7 +265,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                             left: 0,
                                             child: GestureDetector(
                                               onTap: () =>
-                                                  _viewImage(_inspectionEvidences[fieldId]?['images'][index]),
+                                                  _viewImage(fieldEntry.value['images'][index]),
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   color: Colors.blue,
@@ -290,11 +290,11 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                               children: [
                                 IconButton(
                                   icon: const Icon(Icons.photo_library),
-                                  onPressed: () => _pickImages(fieldId),
+                                  onPressed: () => _pickImages(fieldEntry),
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.photo_camera),
-                                  onPressed: () => _takePhoto(fieldId),
+                                  onPressed: () => _takePhoto(fieldEntry),
                                 ),
                               ],
                             )
