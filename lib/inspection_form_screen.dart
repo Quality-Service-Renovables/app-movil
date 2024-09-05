@@ -192,10 +192,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                   final subsections =
                       entry.value['sub_sections'] as List<dynamic>;
 
-                  /*fields.entries.map((fieldEntry){
-                    fieldEntry.value['images'] = [];
-                  }).toList();*/
-
                   return ExpansionTile(
                     title: Text(entry.value['section_details']
                         ['ct_inspection_section'] as String),
@@ -208,10 +204,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                         children: fields.entries.map((fieldEntry) {
                           final field = fieldEntry.value;
                           final String fieldId = fieldEntry.key;
-                          print("fieldEntry:");
-                          print(fieldEntry);
-                          print("images field:");
-                          print(fieldEntry.value['images']);
 
                           return Column(children: [
                             ListTile(
