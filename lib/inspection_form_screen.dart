@@ -20,6 +20,7 @@ class InspectionFormScreen extends StatefulWidget {
 
 class _InspectionFormScreenState extends State<InspectionFormScreen> {
   Map<String, dynamic> _inspectionData = {};
+  Map<String, dynamic> _inspectionEvidences = {};
   bool _isLoading = true;
   List<File> _images = [];
   final ImagePicker _picker = ImagePicker();
@@ -31,11 +32,20 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   // Método para seleccionar múltiples imágenes desde la galería
-  Future<void> _pickImages() async {
+  Future<void> _pickImages(String fieldId) async {
     final List<XFile>? pickedFiles = await _picker.pickMultiImage();
 
     if (pickedFiles != null) {
       setState(() {
+        _inspectionEvidences[fieldId] ??= {};
+        print("--------INICIO _pickImages--------");
+        print(fieldId);
+        print(_inspectionEvidences[fieldId]);
+        print("--------FIN _pickImages--------");
+        _inspectionEvidences[fieldId]['images'] ??= [];
+        _inspectionEvidences[fieldId]['images'].addAll(
+            pickedFiles.map((pickedFile) => File(pickedFile.path)).toList());
+
         _images.addAll(
             pickedFiles.map((pickedFile) => File(pickedFile.path)).toList());
       });
@@ -201,6 +211,11 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                       Column(
                         children: fields.entries.map((fieldEntry) {
                           final field = fieldEntry.value;
+                          final String fieldId = fieldEntry.key;
+                          print("FieldId: "+ fieldId);
+                          print("_inspectionEvidences images:");
+                          print(_inspectionEvidences[fieldId]?['images']);
+
                           return Column(children: [
                             ListTile(
                               title: Text(field['ct_inspection_form']),
@@ -278,7 +293,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                               children: [
                                 IconButton(
                                   icon: const Icon(Icons.photo_library),
-                                  onPressed: _pickImages,
+                                  onPressed: () => _pickImages(fieldId),
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.photo_camera),
@@ -303,6 +318,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                             // Campos de la subsección
                             children: fieldsSub.entries.map((fieldSub) {
                               final field = fieldSub.value;
+                              final String fieldIdSub = fieldSub.key;
+                              print("FieldIdSub: "+ fieldIdSub);
                               return ListTile(
                                 title: Text(field['ct_inspection_form']),
                                 subtitle: const Text("Campo"),
