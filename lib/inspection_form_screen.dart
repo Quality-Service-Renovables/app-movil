@@ -202,94 +202,100 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                       // Campos
                       Column(
                         children: fields.entries.map((field) {
-                          return Column(children: [
-                            ListTile(
-                              title: Text(field.value['ct_inspection_form']),
-                              subtitle: const Text("Campo"),
-                            ),
-                            field.value['images'] == null
-                                ? Text(
-                                    'No se han selecionado imagenes.',
-                                    textAlign: TextAlign.left,
-                                  )
-                                : Wrap(
-                                    spacing: 10,
-                                    runSpacing: 10,
-                                    children: List.generate(
-                                        field.value['images'].length,
-                                        (index) {
-                                      return Stack(
-                                        children: [
-                                          // Imagen seleccionada con un tamaño pequeño
-                                          Image.file(
-                                            field.value['images'][index],
-                                            width:
-                                                100, // Ajusta el ancho de las imágenes
-                                            height:
-                                                100, // Ajusta la altura de las imágenes
-                                            fit: BoxFit.cover,
-                                          ),
-                                          // Botón de eliminación en forma de "X"
-                                          Positioned(
-                                            top: 0,
-                                            right: 0,
-                                            child: GestureDetector(
-                                              onTap: () => _removeImage(
-                                                  index, field),
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  color: Colors.red,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                padding: EdgeInsets.all(4),
-                                                child: Icon(
-                                                  Icons.close,
-                                                  color: Colors.white,
-                                                  size: 16,
+                          return Container(
+                            margin: const EdgeInsets.all(15.0),
+                            decoration: BoxDecoration(
+                                border: Border.all(color: Colors.blueAccent),
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Column(children: [
+                              ListTile(
+                                title: Text(field.value['ct_inspection_form']),
+                                subtitle: const Text("Campo"),
+                              ),
+                              field.value['images'] == null
+                                  ? Text(
+                                      'No se han selecionado imagenes.',
+                                      textAlign: TextAlign.left,
+                                    )
+                                  : Wrap(
+                                      spacing: 10,
+                                      runSpacing: 10,
+                                      children: List.generate(
+                                          field.value['images'].length,
+                                          (index) {
+                                        return Stack(
+                                          children: [
+                                            // Imagen seleccionada con un tamaño pequeño
+                                            Image.file(
+                                              field.value['images'][index],
+                                              width:
+                                                  100, // Ajusta el ancho de las imágenes
+                                              height:
+                                                  100, // Ajusta la altura de las imágenes
+                                              fit: BoxFit.cover,
+                                            ),
+                                            // Botón de eliminación en forma de "X"
+                                            Positioned(
+                                              top: 0,
+                                              right: 0,
+                                              child: GestureDetector(
+                                                onTap: () =>
+                                                    _removeImage(index, field),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.red,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  padding: EdgeInsets.all(4),
+                                                  child: Icon(
+                                                    Icons.close,
+                                                    color: Colors.white,
+                                                    size: 16,
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                          // Botón para visualizar la imagen
-                                          Positioned(
-                                            top: 0,
-                                            left: 0,
-                                            child: GestureDetector(
-                                              onTap: () => _viewImage(field
-                                                  .value['images'][index]),
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  color: Colors.blue,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                padding: EdgeInsets.all(4),
-                                                child: Icon(
-                                                  Icons.zoom_in,
-                                                  color: Colors.white,
-                                                  size: 16,
+                                            // Botón para visualizar la imagen
+                                            Positioned(
+                                              top: 0,
+                                              left: 0,
+                                              child: GestureDetector(
+                                                onTap: () => _viewImage(field
+                                                    .value['images'][index]),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.blue,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  padding: EdgeInsets.all(4),
+                                                  child: Icon(
+                                                    Icons.zoom_in,
+                                                    color: Colors.white,
+                                                    size: 16,
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      );
-                                    }),
+                                          ],
+                                        );
+                                      }),
+                                    ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment
+                                    .center, // Esto centra los botones horizontalmente
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.photo_library),
+                                    onPressed: () => _pickImages(field),
                                   ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment
-                                  .center, // Esto centra los botones horizontalmente
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.photo_library),
-                                  onPressed: () => _pickImages(field),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.photo_camera),
-                                  onPressed: () => _takePhoto(field),
-                                ),
-                              ],
-                            )
-                          ]);
+                                  IconButton(
+                                    icon: const Icon(Icons.photo_camera),
+                                    onPressed: () => _takePhoto(field),
+                                  ),
+                                ],
+                              )
+                            ]),
+                          );
                         }).toList(),
                       ),
                       // Subsecciones
@@ -307,109 +313,123 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                               children: <Widget>[
                                 Column(
                                   children: fieldsSub.entries.map((fieldSub) {
-                                    return Column(children: [
-                                      ListTile(
-                                        title: Text(fieldSub
-                                            .value['ct_inspection_form']),
-                                        subtitle: const Text("Campo"),
-                                      ),
-                                      fieldSub.value['images'] == null
-                                          ? Text(
-                                              'No images selected.',
-                                              textAlign: TextAlign.left,
-                                            )
-                                          : Wrap(
-                                              spacing: 10,
-                                              runSpacing: 10,
-                                              children: List.generate(
-                                                  fieldSub.value['images']
-                                                      .length, (index) {
-                                                return Stack(
-                                                  children: [
-                                                    // Imagen seleccionada con un tamaño pequeño
-                                                    Image.file(
-                                                      fieldSub.value['images']
-                                                          [index],
-                                                      width:
-                                                          100, // Ajusta el ancho de las imágenes
-                                                      height:
-                                                          100, // Ajusta la altura de las imágenes
-                                                      fit: BoxFit.cover,
-                                                    ),
-                                                    // Botón de eliminación en forma de "X"
-                                                    Positioned(
-                                                      top: 0,
-                                                      right: 0,
-                                                      child: GestureDetector(
-                                                        onTap: () =>
-                                                            _removeImage(index,
-                                                                fieldSub),
-                                                        child: Container(
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: Colors.red,
-                                                            shape:
-                                                                BoxShape.circle,
-                                                          ),
-                                                          padding:
-                                                              EdgeInsets.all(4),
-                                                          child: Icon(
-                                                            Icons.close,
-                                                            color: Colors.white,
-                                                            size: 16,
+                                    return Container(
+                                      margin: const EdgeInsets.all(15.0),
+                                      decoration: BoxDecoration(
+                                          border: Border.all(
+                                              color: Colors.blueAccent),
+                                          borderRadius:
+                                              BorderRadius.circular(10)),
+                                      child: Column(children: [
+                                        ListTile(
+                                          title: Text(fieldSub
+                                              .value['ct_inspection_form']),
+                                          subtitle: const Text("Campo"),
+                                        ),
+                                        fieldSub.value['images'] == null
+                                            ? Text(
+                                                'No images selected.',
+                                                textAlign: TextAlign.left,
+                                              )
+                                            : Wrap(
+                                                spacing: 10,
+                                                runSpacing: 10,
+                                                children: List.generate(
+                                                    fieldSub.value['images']
+                                                        .length, (index) {
+                                                  return Stack(
+                                                    children: [
+                                                      // Imagen seleccionada con un tamaño pequeño
+                                                      Image.file(
+                                                        fieldSub.value['images']
+                                                            [index],
+                                                        width:
+                                                            100, // Ajusta el ancho de las imágenes
+                                                        height:
+                                                            100, // Ajusta la altura de las imágenes
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                      // Botón de eliminación en forma de "X"
+                                                      Positioned(
+                                                        top: 0,
+                                                        right: 0,
+                                                        child: GestureDetector(
+                                                          onTap: () =>
+                                                              _removeImage(
+                                                                  index,
+                                                                  fieldSub),
+                                                          child: Container(
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              color: Colors.red,
+                                                              shape: BoxShape
+                                                                  .circle,
+                                                            ),
+                                                            padding:
+                                                                EdgeInsets.all(
+                                                                    4),
+                                                            child: Icon(
+                                                              Icons.close,
+                                                              color:
+                                                                  Colors.white,
+                                                              size: 16,
+                                                            ),
                                                           ),
                                                         ),
                                                       ),
-                                                    ),
-                                                    // Botón para visualizar la imagen
-                                                    Positioned(
-                                                      top: 0,
-                                                      left: 0,
-                                                      child: GestureDetector(
-                                                        onTap: () => _viewImage(
-                                                            fieldSub.value[
-                                                                    'images']
-                                                                [index]),
-                                                        child: Container(
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: Colors.blue,
-                                                            shape:
-                                                                BoxShape.circle,
-                                                          ),
-                                                          padding:
-                                                              EdgeInsets.all(4),
-                                                          child: Icon(
-                                                            Icons.zoom_in,
-                                                            color: Colors.white,
-                                                            size: 16,
+                                                      // Botón para visualizar la imagen
+                                                      Positioned(
+                                                        top: 0,
+                                                        left: 0,
+                                                        child: GestureDetector(
+                                                          onTap: () => _viewImage(
+                                                              fieldSub.value[
+                                                                      'images']
+                                                                  [index]),
+                                                          child: Container(
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              color:
+                                                                  Colors.blue,
+                                                              shape: BoxShape
+                                                                  .circle,
+                                                            ),
+                                                            padding:
+                                                                EdgeInsets.all(
+                                                                    4),
+                                                            child: Icon(
+                                                              Icons.zoom_in,
+                                                              color:
+                                                                  Colors.white,
+                                                              size: 16,
+                                                            ),
                                                           ),
                                                         ),
                                                       ),
-                                                    ),
-                                                  ],
-                                                );
-                                              }),
+                                                    ],
+                                                  );
+                                                }),
+                                              ),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment
+                                              .center, // Esto centra los botones horizontalmente
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(
+                                                  Icons.photo_library),
+                                              onPressed: () =>
+                                                  _pickImages(fieldSub),
                                             ),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment
-                                            .center, // Esto centra los botones horizontalmente
-                                        children: [
-                                          IconButton(
-                                            icon:
-                                                const Icon(Icons.photo_library),
-                                            onPressed: () =>
-                                                _pickImages(fieldSub),
-                                          ),
-                                          IconButton(
-                                            icon:
-                                                const Icon(Icons.photo_camera),
-                                            onPressed: () =>
-                                                _takePhoto(fieldSub),
-                                          ),
-                                        ],
-                                      )
-                                    ]);
+                                            IconButton(
+                                              icon: const Icon(
+                                                  Icons.photo_camera),
+                                              onPressed: () =>
+                                                  _takePhoto(fieldSub),
+                                            ),
+                                          ],
+                                        )
+                                      ]),
+                                    );
                                   }).toList(),
                                 ),
                               ]);
