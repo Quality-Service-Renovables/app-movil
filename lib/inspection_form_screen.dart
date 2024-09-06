@@ -31,35 +31,35 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   // Método para seleccionar múltiples imágenes desde la galería
-  Future<void> _pickImages(fieldEntry) async {
+  Future<void> _pickImages(field) async {
     final List<XFile>? pickedFiles = await _picker.pickMultiImage();
 
     if (pickedFiles != null) {
       setState(() {
-          fieldEntry.value['images'] ??= [];
-          fieldEntry.value['images'].addAll(
-          pickedFiles.map((pickedFile) => File(pickedFile.path)).toList());
+        field.value['images'] ??= [];
+        field.value['images'].addAll(
+            pickedFiles.map((pickedFile) => File(pickedFile.path)).toList());
       });
     }
   }
 
   // Método para tomar una foto con la cámara
-  Future<void> _takePhoto(fieldEntry) async {
+  Future<void> _takePhoto(field) async {
     final XFile? pickedFile =
         await _picker.pickImage(source: ImageSource.camera);
 
     if (pickedFile != null) {
       setState(() {
-        fieldEntry.value['images'] ??= [];
-        fieldEntry.value['images'].add(File(pickedFile.path));
+        field.value['images'] ??= [];
+        field.value['images'].add(File(pickedFile.path));
       });
     }
   }
 
   // Método para eliminar una imagen seleccionada
-  void _removeImage(int index, fieldEntry) {
+  void _removeImage(int index, field) {
     setState(() {
-      fieldEntry.value['images'].removeAt(index);
+      field.value['images'].removeAt(index);
     });
   }
 
@@ -201,30 +201,28 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                     children: <Widget>[
                       // Campos
                       Column(
-                        children: fields.entries.map((fieldEntry) {
-                          final field = fieldEntry.value;
-                          final String fieldId = fieldEntry.key;
-
+                        children: fields.entries.map((field) {
                           return Column(children: [
                             ListTile(
-                              title: Text(field['ct_inspection_form']),
+                              title: Text(field.value['ct_inspection_form']),
                               subtitle: const Text("Campo"),
                             ),
-                            fieldEntry.value['images'] == null
+                            field.value['images'] == null
                                 ? Text(
-                                    'No images selected.',
+                                    'No se han selecionado imagenes.',
                                     textAlign: TextAlign.left,
                                   )
                                 : Wrap(
                                     spacing: 10,
                                     runSpacing: 10,
-                                    children:
-                                        List.generate(fieldEntry.value['images'].length, (index) {
+                                    children: List.generate(
+                                        field.value['images'].length,
+                                        (index) {
                                       return Stack(
                                         children: [
                                           // Imagen seleccionada con un tamaño pequeño
                                           Image.file(
-                                            fieldEntry.value['images'][index],
+                                            field.value['images'][index],
                                             width:
                                                 100, // Ajusta el ancho de las imágenes
                                             height:
@@ -236,7 +234,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                             top: 0,
                                             right: 0,
                                             child: GestureDetector(
-                                              onTap: () => _removeImage(index, fieldEntry),
+                                              onTap: () => _removeImage(
+                                                  index, field),
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   color: Colors.red,
@@ -256,8 +255,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                             top: 0,
                                             left: 0,
                                             child: GestureDetector(
-                                              onTap: () =>
-                                                  _viewImage(fieldEntry.value['images'][index]),
+                                              onTap: () => _viewImage(field
+                                                  .value['images'][index]),
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   color: Colors.blue,
@@ -282,11 +281,11 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                               children: [
                                 IconButton(
                                   icon: const Icon(Icons.photo_library),
-                                  onPressed: () => _pickImages(fieldEntry),
+                                  onPressed: () => _pickImages(field),
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.photo_camera),
-                                  onPressed: () => _takePhoto(fieldEntry),
+                                  onPressed: () => _takePhoto(field),
                                 ),
                               ],
                             )
@@ -299,22 +298,121 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                           final fieldsSub =
                               subsection['fields'] as Map<String, dynamic>;
                           return ExpansionTile(
-                            title: Text(
-                                subsection['ct_inspection_section'] as String),
-                            subtitle: const Text("Sub-sección"),
-                            textColor: Colors.blue,
-                            collapsedTextColor: Colors.blue,
-                            // Campos de la subsección
-                            children: fieldsSub.entries.map((fieldSub) {
-                              final field = fieldSub.value;
-                              final String fieldIdSub = fieldSub.key;
-                              print("FieldIdSub: "+ fieldIdSub);
-                              return ListTile(
-                                title: Text(field['ct_inspection_form']),
-                                subtitle: const Text("Campo"),
-                              );
-                            }).toList(),
-                          );
+                              title: Text(subsection['ct_inspection_section']
+                                  as String),
+                              subtitle: const Text("Sub-sección"),
+                              textColor: Colors.blue,
+                              collapsedTextColor: Colors.blue,
+                              // Campos de la subsección
+                              children: <Widget>[
+                                Column(
+                                  children: fieldsSub.entries.map((fieldSub) {
+                                    return Column(children: [
+                                      ListTile(
+                                        title: Text(fieldSub
+                                            .value['ct_inspection_form']),
+                                        subtitle: const Text("Campo"),
+                                      ),
+                                      fieldSub.value['images'] == null
+                                          ? Text(
+                                              'No images selected.',
+                                              textAlign: TextAlign.left,
+                                            )
+                                          : Wrap(
+                                              spacing: 10,
+                                              runSpacing: 10,
+                                              children: List.generate(
+                                                  fieldSub.value['images']
+                                                      .length, (index) {
+                                                return Stack(
+                                                  children: [
+                                                    // Imagen seleccionada con un tamaño pequeño
+                                                    Image.file(
+                                                      fieldSub.value['images']
+                                                          [index],
+                                                      width:
+                                                          100, // Ajusta el ancho de las imágenes
+                                                      height:
+                                                          100, // Ajusta la altura de las imágenes
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                    // Botón de eliminación en forma de "X"
+                                                    Positioned(
+                                                      top: 0,
+                                                      right: 0,
+                                                      child: GestureDetector(
+                                                        onTap: () =>
+                                                            _removeImage(index,
+                                                                fieldSub),
+                                                        child: Container(
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Colors.red,
+                                                            shape:
+                                                                BoxShape.circle,
+                                                          ),
+                                                          padding:
+                                                              EdgeInsets.all(4),
+                                                          child: Icon(
+                                                            Icons.close,
+                                                            color: Colors.white,
+                                                            size: 16,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    // Botón para visualizar la imagen
+                                                    Positioned(
+                                                      top: 0,
+                                                      left: 0,
+                                                      child: GestureDetector(
+                                                        onTap: () => _viewImage(
+                                                            fieldSub.value[
+                                                                    'images']
+                                                                [index]),
+                                                        child: Container(
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Colors.blue,
+                                                            shape:
+                                                                BoxShape.circle,
+                                                          ),
+                                                          padding:
+                                                              EdgeInsets.all(4),
+                                                          child: Icon(
+                                                            Icons.zoom_in,
+                                                            color: Colors.white,
+                                                            size: 16,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                );
+                                              }),
+                                            ),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment
+                                            .center, // Esto centra los botones horizontalmente
+                                        children: [
+                                          IconButton(
+                                            icon:
+                                                const Icon(Icons.photo_library),
+                                            onPressed: () =>
+                                                _pickImages(fieldSub),
+                                          ),
+                                          IconButton(
+                                            icon:
+                                                const Icon(Icons.photo_camera),
+                                            onPressed: () =>
+                                                _takePhoto(fieldSub),
+                                          ),
+                                        ],
+                                      )
+                                    ]);
+                                  }).toList(),
+                                ),
+                              ]);
                         }).toList(),
                       ),
                     ],
