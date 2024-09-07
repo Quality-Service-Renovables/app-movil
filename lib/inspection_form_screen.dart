@@ -212,6 +212,22 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                 title: Text(field.value['ct_inspection_form']),
                                 subtitle: const Text("Campo"),
                               ),
+                              Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 16.0), // Margen derecho e izquierdo
+                                child: TextField(
+                                  decoration: InputDecoration(
+                                    labelText: field.value['ct_inspection_form_code'],
+                                    labelStyle: TextStyle(color: Colors.red[900]),
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(color: Colors.red[900]!),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(color: Colors.red[900]!),
+                                    ),
+                                  ),
+                                  cursorColor: Colors.red[900],
+                                ),
+                              ),
                               field.value['images'] == null
                                   ? Text(
                                       'No se han selecionado imagenes.',
@@ -325,6 +341,22 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                           title: Text(fieldSub
                                               .value['ct_inspection_form']),
                                           subtitle: const Text("Campo"),
+                                        ),
+                                        Container(
+                                          margin: const EdgeInsets.symmetric(horizontal: 16.0), // Margen derecho e izquierdo
+                                          child: TextField(
+                                            decoration: InputDecoration(
+                                              labelText: fieldSub.value['ct_inspection_form_code'],
+                                              labelStyle: TextStyle(color: Colors.red[900]),
+                                              border: OutlineInputBorder(
+                                                borderSide: BorderSide(color: Colors.red[900]!),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(color: Colors.red[900]!),
+                                              ),
+                                            ),
+                                            cursorColor: Colors.red[900],
+                                          ),
                                         ),
                                         fieldSub.value['images'] == null
                                             ? Text(
