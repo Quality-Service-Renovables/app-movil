@@ -408,8 +408,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                         borderRadius: BorderRadius.circular(
                                             8.0), // Borde redondeado opcional
                                       ),
-                                      margin: EdgeInsets.all(
-                                          16.0), // Espaciado opcional alrededor del botón
+                                      margin: EdgeInsets.only(left:16, right: 16, bottom: 16), // Espaciado opcional alrededor del botón
                                       child: IconButton(
                                         icon: const Icon(Icons.save),
                                         onPressed: () => _saveField(field),
@@ -642,8 +641,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                       BorderRadius.circular(
                                                           8.0), // Borde redondeado opcional
                                                 ),
-                                                margin: EdgeInsets.all(
-                                                    16.0), // Espaciado opcional alrededor del botón
+                                                margin: EdgeInsets.only(left:16, right: 16, bottom: 16), // Espaciado opcional alrededor del botón
                                                 child: IconButton(
                                                   icon: const Icon(Icons.save),
                                                   onPressed: () =>
