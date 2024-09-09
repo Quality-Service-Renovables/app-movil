@@ -249,6 +249,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                       child: IconButton(
                                         icon: const Icon(Icons.photo_library),
                                         onPressed: () => _pickImages(field),
+                                        style: ButtonStyle(
+                                          iconColor: WidgetStateProperty.all(
+                                              Colors.red[900]),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -261,10 +265,14 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                             8.0), // Borde redondeado opcional
                                       ),
                                       margin: EdgeInsets.all(
-                                          15.0), // Espaciado opcional alrededor del botón
+                                          16.0), // Espaciado opcional alrededor del botón
                                       child: IconButton(
                                         icon: const Icon(Icons.photo_camera),
                                         onPressed: () => _takePhoto(field),
+                                        style: ButtonStyle(
+                                          iconColor: WidgetStateProperty.all(
+                                              Colors.red[900]),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -286,13 +294,17 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                           return Stack(
                                             children: [
                                               // Imagen seleccionada con un tamaño pequeño
-                                              Image.file(
-                                                field.value['images'][index],
-                                                width:
-                                                    100, // Ajusta el ancho de las imágenes
-                                                height:
-                                                    100, // Ajusta la altura de las imágenes
-                                                fit: BoxFit.cover,
+                                              ClipRRect(
+                                                borderRadius: BorderRadius.circular(
+                                                    8.0), // Ajusta el radio del borde
+                                                child: Image.file(
+                                                  field.value['images'][index],
+                                                  width:
+                                                      100, // Ajusta el ancho de las imágenes
+                                                  height:
+                                                      100, // Ajusta la altura de las imágenes
+                                                  fit: BoxFit.cover,
+                                                ),
                                               ),
                                               // Botón de eliminación en forma de "X"
                                               Positioned(
@@ -413,6 +425,11 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                 child: IconButton(
                                                   icon: const Icon(
                                                       Icons.photo_library),
+                                                  style: ButtonStyle(
+                                                    iconColor:
+                                                        WidgetStateProperty.all(
+                                                            Colors.red[900]),
+                                                  ),
                                                   onPressed: () =>
                                                       _pickImages(fieldSub),
                                                 ),
@@ -429,12 +446,17 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                           8.0), // Borde redondeado opcional
                                                 ),
                                                 margin: EdgeInsets.all(
-                                                    15.0), // Espaciado opcional alrededor del botón
+                                                    16.0), // Espaciado opcional alrededor del botón
                                                 child: IconButton(
                                                   icon: const Icon(
                                                       Icons.photo_camera),
                                                   onPressed: () =>
                                                       _takePhoto(fieldSub),
+                                                  style: ButtonStyle(
+                                                    iconColor:
+                                                        WidgetStateProperty.all(
+                                                            Colors.red[900]),
+                                                  ),
                                                 ),
                                               ),
                                             ),
@@ -457,15 +479,21 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                     return Stack(
                                                       children: [
                                                         // Imagen seleccionada con un tamaño pequeño
-                                                        Image.file(
-                                                          fieldSub.value[
-                                                              'images'][index],
-                                                          width:
-                                                              100, // Ajusta el ancho de las imágenes
-                                                          height:
-                                                              100, // Ajusta la altura de las imágenes
-                                                          fit: BoxFit.cover,
-                                                        ),
+                                                        ClipRRect(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        8.0), // Ajusta el radio del borde
+                                                            child: Image.file(
+                                                              fieldSub.value[
+                                                                      'images']
+                                                                  [index],
+                                                              width:
+                                                                  100, // Ajusta el ancho de las imágenes
+                                                              height:
+                                                                  100, // Ajusta la altura de las imágenes
+                                                              fit: BoxFit.cover,
+                                                            )),
                                                         // Botón de eliminación en forma de "X"
                                                         Positioned(
                                                           top: 0,
