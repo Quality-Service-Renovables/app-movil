@@ -167,6 +167,50 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     await _getFormInspection(widget.ctInspectionUuid);
   }
 
+  Future<void> _saveField(field) async {
+    print('Saving field: ${field.key}');
+    /*final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final inspectionUuid = widget.ctInspectionUuid;
+    final fieldUuid = field.key;
+    final comments = field.value['comments'];
+    final images = field.value['images'];
+
+    final response = await http.post(
+      Uri.parse('https://qsr.mx/api/inspection/forms/save-field'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'ct_inspection_uuid': inspectionUuid,
+        'ct_inspection_form_uuid': fieldUuid,
+        'comments': comments,
+        'images': images,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      final data = jsonResponse['data'];
+
+      setState(() {
+        field['comments'] = data['comments'];
+        field['images'] = data['images'];
+      });
+    } else {
+      showErrorDialog(
+        context,
+        'QSR Checklist',
+        [
+          'No se pudo guardar la información.',
+          'Revise su conexión a internet.',
+          'Si el problema persiste contacte al administrador.',
+        ],
+      );
+    }*/
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -352,6 +396,32 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                           );
                                         }),
                                       )),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment
+                                    .center, // Esto centra los botones horizontalmente
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                            color: Colors.grey), // Añadir borde
+                                        borderRadius: BorderRadius.circular(
+                                            8.0), // Borde redondeado opcional
+                                      ),
+                                      margin: EdgeInsets.all(
+                                          16.0), // Espaciado opcional alrededor del botón
+                                      child: IconButton(
+                                        icon: const Icon(Icons.save),
+                                        onPressed: () => _saveField(field),
+                                        style: ButtonStyle(
+                                          iconColor: WidgetStateProperty.all(
+                                              Colors.green),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ]),
                           );
                         }).toList(),
@@ -558,6 +628,36 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                     );
                                                   }),
                                                 )),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment
+                                              .center, // Esto centra los botones horizontalmente
+                                          children: [
+                                            Expanded(
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                      color: Colors
+                                                          .grey), // Añadir borde
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          8.0), // Borde redondeado opcional
+                                                ),
+                                                margin: EdgeInsets.all(
+                                                    16.0), // Espaciado opcional alrededor del botón
+                                                child: IconButton(
+                                                  icon: const Icon(Icons.save),
+                                                  onPressed: () =>
+                                                      _saveField(fieldSub),
+                                                  style: ButtonStyle(
+                                                    iconColor:
+                                                        WidgetStateProperty.all(
+                                                            Colors.green),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ]),
                                     );
                                   }).toList(),
