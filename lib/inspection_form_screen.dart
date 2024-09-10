@@ -169,7 +169,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
 
   Future<void> _saveField(field, controller) async {
     print("Controller:");
-    field.value['result'] = controller.text;
+    field.value['comments'] = controller.text;
     print('Saving field: ${field.key}');
     print(field);
     /*final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -252,7 +252,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                           // Crea un TextEditingController para cada campo
                           TextEditingController _controller = TextEditingController();
                           // Asigna el valor del result actual al controlador
-                          _controller.text = field.value['result'] ?? '';
+                          _controller.text = field.value['comments'] ?? '';
 
 
                           return Container(
@@ -454,7 +454,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                     // Crea un TextEditingController para cada campo
                                     TextEditingController _controllerSub = TextEditingController();
                                     // Asigna el valor del result actual al controlador
-                                    _controllerSub.text = fieldSub.value['result'] ?? '';
+                                    _controllerSub.text = fieldSub.value['comments'] ?? '';
 
                                     return Container(
                                       margin: const EdgeInsets.all(15.0),
