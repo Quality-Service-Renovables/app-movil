@@ -105,6 +105,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       },
     );
 
+    print("ctInspectionUuid: " + ctInspectionUuid);
+
     final jsonResponse = json.decode(response.body);
 
     if (response.statusCode == 200) {
@@ -169,9 +171,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
 
   Future<void> _saveField(field, controller) async {
     print("Controller:");
-    field.value['comments'] = controller.text;
+    field.value['result']['inspection_form_comments'] = controller.text;
     print('Saving field: ${field.key}');
-    print(field);
+    print(field.value['result']['inspection_form_comments']);
     /*final SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final inspectionUuid = widget.ctInspectionUuid;
@@ -250,10 +252,19 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                       Column(
                         children: fields.entries.map((field) {
                           // Crea un TextEditingController para cada campo
-                          TextEditingController _controller = TextEditingController();
+                          TextEditingController _controller =
+                              TextEditingController();
                           // Asigna el valor del result actual al controlador
-                          _controller.text = field.value['comments'] ?? '';
+                          _controller.text = field.value['result'] != null
+                              ? field.value['result']
+                                  ['inspection_form_comments']
+                              : '';
 
+                          field.value['result'] = field.value['result'] != null
+                              ? field.value['result']
+                              : {
+                                  'inspection_form_comments': '',
+                                };
 
                           return Container(
                             margin: const EdgeInsets.all(15.0),
@@ -418,10 +429,15 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                         borderRadius: BorderRadius.circular(
                                             8.0), // Borde redondeado opcional
                                       ),
-                                      margin: EdgeInsets.only(left:16, right: 16, bottom: 16), // Espaciado opcional alrededor del botón
+                                      margin: EdgeInsets.only(
+                                          left: 16,
+                                          right: 16,
+                                          bottom:
+                                              16), // Espaciado opcional alrededor del botón
                                       child: IconButton(
                                         icon: const Icon(Icons.save),
-                                        onPressed: () => _saveField(field, _controller),
+                                        onPressed: () =>
+                                            _saveField(field, _controller),
                                         style: ButtonStyle(
                                           iconColor: WidgetStateProperty.all(
                                               Colors.green),
@@ -440,7 +456,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                         children: subsections.map((subsection) {
                           final fieldsSub =
                               subsection['fields'] as Map<String, dynamic>;
-                              
+
                           return ExpansionTile(
                               title: Text(subsection['ct_inspection_section']
                                   as String),
@@ -452,9 +468,21 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                 Column(
                                   children: fieldsSub.entries.map((fieldSub) {
                                     // Crea un TextEditingController para cada campo
-                                    TextEditingController _controllerSub = TextEditingController();
+                                    TextEditingController _controllerSub =
+                                        TextEditingController();
                                     // Asigna el valor del result actual al controlador
-                                    _controllerSub.text = fieldSub.value['comments'] ?? '';
+                                    _controllerSub.text =
+                                        fieldSub.value['result'] != null
+                                            ? fieldSub.value['result']
+                                                ['inspection_form_comments']
+                                            : '';
+                                            
+                                    fieldSub.value['result'] =
+                                        fieldSub.value['result'] != null
+                                            ? fieldSub.value['result']
+                                            : {
+                                                'inspection_form_comments': '',
+                                              };
 
                                     return Container(
                                       margin: const EdgeInsets.all(15.0),
@@ -658,11 +686,15 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                       BorderRadius.circular(
                                                           8.0), // Borde redondeado opcional
                                                 ),
-                                                margin: EdgeInsets.only(left:16, right: 16, bottom: 16), // Espaciado opcional alrededor del botón
+                                                margin: EdgeInsets.only(
+                                                    left: 16,
+                                                    right: 16,
+                                                    bottom:
+                                                        16), // Espaciado opcional alrededor del botón
                                                 child: IconButton(
                                                   icon: const Icon(Icons.save),
-                                                  onPressed: () =>
-                                                      _saveField(fieldSub, _controllerSub),
+                                                  onPressed: () => _saveField(
+                                                      fieldSub, _controllerSub),
                                                   style: ButtonStyle(
                                                     iconColor:
                                                         WidgetStateProperty.all(
