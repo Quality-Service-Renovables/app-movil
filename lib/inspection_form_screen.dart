@@ -72,7 +72,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.file(image),
+              _image(image),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text('Cerrar'),
@@ -216,6 +216,35 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     }*/
   }
 
+  List<File> _getImagesFromField(field) {
+    final images = <File>[];
+    if (field.value['result'] != null && field.value['result']['inspection_form_comments'] != '') {
+      for (var image in field.value['result']['evidences']) {
+        images.add(File("https://www.qsr.mx/" + image['inspection_evidence']));
+      }
+    }
+    return images;
+  }
+
+  Widget _image(File field) {
+    String imagePath = field.path;
+    // Si la imagen es de internet
+    if (imagePath.startsWith('http') || imagePath.startsWith('www')) {
+      return Image.network(
+        imagePath,
+        width: 100,
+        height: 100,
+      );
+    } else {
+      // Si la imagen es local (file path)
+      return Image.file(
+        File(imagePath),
+        width: 100,
+        height: 100,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -251,6 +280,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                       // Campos
                       Column(
                         children: fields.entries.map((field) {
+                          field.value['images'] = _getImagesFromField(field);
+
                           // Crea un TextEditingController para cada campo
                           TextEditingController _controller =
                               TextEditingController();
@@ -360,17 +391,11 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                             children: [
                                               // Imagen seleccionada con un tamaño pequeño
                                               ClipRRect(
-                                                borderRadius: BorderRadius.circular(
-                                                    8.0), // Ajusta el radio del borde
-                                                child: Image.file(
-                                                  field.value['images'][index],
-                                                  width:
-                                                      100, // Ajusta el ancho de las imágenes
-                                                  height:
-                                                      100, // Ajusta la altura de las imágenes
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          8.0), // Ajusta el radio del borde
+                                                  child: _image(field
+                                                      .value['images'][index])),
                                               // Botón de eliminación en forma de "X"
                                               Positioned(
                                                 top: 0,
@@ -476,7 +501,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                             ? fieldSub.value['result']
                                                 ['inspection_form_comments']
                                             : '';
-                                            
+
                                     fieldSub.value['result'] =
                                         fieldSub.value['result'] != null
                                             ? fieldSub.value['result']
