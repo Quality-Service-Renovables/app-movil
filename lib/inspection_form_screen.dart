@@ -23,6 +23,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   Map<String, dynamic> _inspectionEvidences = {};
   bool _isLoading = true;
   final ImagePicker _picker = ImagePicker();
+  IconData _uploadIcon = Icons.cloud_upload_sharp;
 
   @override
   void initState() {
@@ -169,6 +170,74 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     await _getFormInspection(widget.ctInspectionUuid);
   }
 
+  Future<void> _confirmChanges() async {
+    final hasConnection = await checkInternetConnection();
+
+    if (hasConnection) {
+      final db = await DatabaseHelper().database;
+      final now = DateTime.now().toIso8601String();
+      final jsonData = jsonEncode(_inspectionData);
+
+      await db.insert(
+        'inspection_forms',
+        {
+          'ct_inspection_uuid': widget.ctInspectionUuid,
+          'json_form': jsonData,
+          'created_at': now,
+          'updated_at': now,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+      // Consulta el registro guardado para depuración
+      final List<Map<String, dynamic>> result = await db.query(
+        'inspection_forms',
+        where: 'ct_inspection_uuid = ?',
+        whereArgs: [widget.ctInspectionUuid],
+      );
+      // Cambia el ícono a cloud_done
+      setState(() {
+        _uploadIcon = Icons.cloud_done;
+      });
+      print('Registro guardado: $result');
+    } else {
+      showErrorDialog(
+        context,
+        'QSR Checklist',
+        [
+          'Se requiere conexión a internet para sincronización de cambios.',
+        ],
+      );
+    }
+  }
+
+  void _showConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirmar cambios'),
+          content: Text('¿Estás seguro de que deseas confirmar los cambios?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Cierra el diálogo
+              },
+              child: Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                _confirmChanges(); // Llama a la función para confirmar cambios
+                Navigator.of(context).pop(); // Cierra el diálogo
+              },
+              child: Text('Confirmar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _saveField(field, controller) async {
     print("Controller:");
     field.value['result']['inspection_form_comments'] = controller.text;
@@ -227,6 +296,17 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
             onPressed: () =>
                 LogoutService.logout(context), // Utiliza el servicio de logout
           ),
+          Container(
+            margin: const EdgeInsets.only(left: 16.0, right: 10.0), // Margen a la izquierda
+            decoration: BoxDecoration(
+              color: Colors.blue, // Color de fondo
+              shape: BoxShape.circle, // Forma redondeada
+            ),
+            child: IconButton(
+              icon: Icon(_uploadIcon, color: Colors.white), // Icono centrado y color blanco
+              onPressed: () => _showConfirmationDialog(context), // Utiliza el servicio de logout
+            ),
+          )
         ],
       ),
       body: _isLoading
