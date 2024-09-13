@@ -38,8 +38,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     if (pickedFiles != null) {
       setState(() {
         field.value['images'] ??= [];
-        field.value['images'].addAll(
-            pickedFiles.map((pickedFile) => File(pickedFile.path)).toList());
+        field.value['images']
+            .addAll(pickedFiles.map((pickedFile) => pickedFile.path).toList());
       });
     }
   }
@@ -52,7 +52,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     if (pickedFile != null) {
       setState(() {
         field.value['images'] ??= [];
-        field.value['images'].add(File(pickedFile.path));
+        field.value['images'].add(pickedFile.path);
       });
     }
   }
@@ -297,14 +297,17 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                 LogoutService.logout(context), // Utiliza el servicio de logout
           ),
           Container(
-            margin: const EdgeInsets.only(left: 16.0, right: 10.0), // Margen a la izquierda
+            margin: const EdgeInsets.only(
+                left: 16.0, right: 10.0), // Margen a la izquierda
             decoration: BoxDecoration(
               color: Colors.blue, // Color de fondo
               shape: BoxShape.circle, // Forma redondeada
             ),
             child: IconButton(
-              icon: Icon(_uploadIcon, color: Colors.white), // Icono centrado y color blanco
-              onPressed: () => _showConfirmationDialog(context), // Utiliza el servicio de logout
+              icon: Icon(_uploadIcon,
+                  color: Colors.white), // Icono centrado y color blanco
+              onPressed: () => _showConfirmationDialog(
+                  context), // Utiliza el servicio de logout
             ),
           )
         ],
@@ -442,8 +445,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                               ClipRRect(
                                                 borderRadius: BorderRadius.circular(
                                                     8.0), // Ajusta el radio del borde
-                                                child: Image.file(
-                                                  field.value['images'][index],
+                                                child: Image.file(File(
+                                                  field.value['images'][index]),
                                                   width:
                                                       100, // Ajusta el ancho de las imágenes
                                                   height:
@@ -477,8 +480,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                 top: 0,
                                                 left: 0,
                                                 child: GestureDetector(
-                                                  onTap: () => _viewImage(field
-                                                      .value['images'][index]),
+                                                  onTap: () => _viewImage(File(field
+                                                      .value['images'][index])),
                                                   child: Container(
                                                     decoration: BoxDecoration(
                                                       color: Colors.blue,
@@ -556,7 +559,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                             ? fieldSub.value['result']
                                                 ['inspection_form_comments']
                                             : '';
-                                            
+
                                     fieldSub.value['result'] =
                                         fieldSub.value['result'] != null
                                             ? fieldSub.value['result']
@@ -679,9 +682,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                                     .circular(
                                                                         8.0), // Ajusta el radio del borde
                                                             child: Image.file(
-                                                              fieldSub.value[
+                                                              File(fieldSub
+                                                                          .value[
                                                                       'images']
-                                                                  [index],
+                                                                  [index]),
                                                               width:
                                                                   100, // Ajusta el ancho de las imágenes
                                                               height:
@@ -724,10 +728,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                           left: 0,
                                                           child:
                                                               GestureDetector(
-                                                            onTap: () => _viewImage(
+                                                            onTap: () => _viewImage(File(
                                                                 fieldSub.value[
                                                                         'images']
-                                                                    [index]),
+                                                                    [index])),
                                                             child: Container(
                                                               decoration:
                                                                   BoxDecoration(
