@@ -40,7 +40,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       setState(() {
         field.value['images'] ??= [];
         field.value['images'].addAll(
-            pickedFiles.map((pickedFile) => File(pickedFile.path)).toList());
+            pickedFiles.map((pickedFile) => pickedFile.path).toList());
       });
     }
   }
@@ -53,7 +53,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     if (pickedFile != null) {
       setState(() {
         field.value['images'] ??= [];
-        field.value['images'].add(File(pickedFile.path));
+        field.value['images'].add(pickedFile.path);
       });
     }
   }
@@ -66,7 +66,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   // Método para mostrar la imagen en un modal
-  void _viewImage(File image) {
+  void _viewImage(image) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -189,11 +189,11 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     }
   }
 
-  List<File> _getImagesFromField(field) {
-    final images = <File>[];
+  List<dynamic> _getImagesFromField(field) {
+    final images = [];
     if (field['result'] != null && field['result']['evidences'] != null) {
       for (var image in field['result']['evidences']) {
-        images.add(File("https://www.qsr.mx/" + image['inspection_evidence']));
+        images.add("https://www.qsr.mx/" + image['inspection_evidence']);
       }
     }
     return images;
@@ -204,6 +204,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   Future<void> _confirmChanges() async {
+    print("JSON FORM:");
+    debugPrint(jsonEncode(_inspectionData), wrapWidth: 1024);
     final hasConnection = await checkInternetConnection();
 
     if (hasConnection) {
@@ -323,8 +325,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     }*/
   }
 
-  Widget _image(File field, {String from = 'cover'}) {
-    String imagePath = field.path;
+  Widget _image(imagePath, {String from = 'cover'}) {
+    //String imagePath = field.path;
 
     // Si la imagen es de internet
     if (imagePath.startsWith('http') || imagePath.startsWith('www')) {
@@ -414,6 +416,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                           // Asigna el valor del result actual al controlador
                           _controller.text =
                               field.value['result']['inspection_form_comments'];
+                            
+                          field.value['result']['inspection_form_comments'] = _controller.text;
 
                           return Container(
                             margin: const EdgeInsets.all(15.0),
@@ -617,6 +621,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                     _controllerSub.text =
                                         fieldSub.value['result']
                                             ['inspection_form_comments'];
+
+                                    fieldSub.value['result']['inspection_form_comments'] = _controllerSub.text;
 
                                     return Container(
                                       margin: const EdgeInsets.all(15.0),
