@@ -23,8 +23,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   Map<String, dynamic> _inspectionData = {};
   Map<String, dynamic> _inspectionEvidences = {};
   bool _isLoading = true;
+  bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
-  IconData _uploadIcon = Icons.cloud_upload_sharp;
+  IconData _uploadIcon = Icons.cloud_sync;
 
   @override
   void initState() {
@@ -41,6 +42,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         field.value['images'] ??= [];
         field.value['images']
             .addAll(pickedFiles.map((pickedFile) => pickedFile.path).toList());
+        _uploadIcon = Icons.cloud_sync;
       });
     }
   }
@@ -54,6 +56,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       setState(() {
         field.value['images'] ??= [];
         field.value['images'].add(pickedFile.path);
+        _uploadIcon = Icons.cloud_sync;
       });
     }
   }
@@ -62,6 +65,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   void _removeImage(int index, field) {
     setState(() {
       field.value['images'].removeAt(index);
+      _uploadIcon = Icons.cloud_sync;
     });
   }
 
@@ -204,6 +208,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   Future<void> _confirmChanges() async {
+    setState(() {
+      _isUploading = true;
+    });
     print("JSON FORM:");
     debugPrint(jsonEncode(_inspectionData), wrapWidth: 1024);
     final hasConnection = await checkInternetConnection();
@@ -233,6 +240,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       // Cambia el ícono a cloud_done
       setState(() {
         _uploadIcon = Icons.cloud_done;
+        _isUploading = false;
       });
       print('Registro guardado: $result');
     } else {
@@ -377,12 +385,14 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
               color: Colors.blue, // Color de fondo
               shape: BoxShape.circle, // Forma redondeada
             ),
-            child: IconButton(
-              icon: Icon(_uploadIcon,
-                  color: Colors.white), // Icono centrado y color blanco
-              onPressed: () => _showConfirmationDialog(
-                  context), // Utiliza el servicio de logout
-            ),
+            child: _isUploading
+                ? CircularProgressIndicator()
+                : IconButton(
+                    icon: Icon(_uploadIcon,
+                        color: Colors.white), // Icono centrado y color blanco
+                    onPressed: () => _showConfirmationDialog(
+                        context), // Utiliza el servicio de logout
+                  ),
           )
         ],
       ),
@@ -435,6 +445,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                   onChanged: (value) {
                                     field.value['result']
                                         ['inspection_form_comments'] = value;
+                                    setState(() {
+                                      _uploadIcon = Icons.cloud_sync;
+                                    });
                                   },
                                   decoration: InputDecoration(
                                     labelText: "Comentarios",
@@ -648,6 +661,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                               fieldSub.value['result'][
                                                       'inspection_form_comments'] =
                                                   value;
+                                              setState(() {
+                                                _uploadIcon = Icons.cloud_sync;
+                                              });
                                             },
                                             decoration: InputDecoration(
                                               labelText: "Comentarios",
