@@ -39,8 +39,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     if (pickedFiles != null) {
       setState(() {
         field.value['images'] ??= [];
-        field.value['images'].addAll(
-            pickedFiles.map((pickedFile) => pickedFile.path).toList());
+        field.value['images']
+            .addAll(pickedFiles.map((pickedFile) => pickedFile.path).toList());
       });
     }
   }
@@ -416,8 +416,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                           // Asigna el valor del result actual al controlador
                           _controller.text =
                               field.value['result']['inspection_form_comments'];
-                            
-                          field.value['result']['inspection_form_comments'] = _controller.text;
 
                           return Container(
                             margin: const EdgeInsets.all(15.0),
@@ -434,6 +432,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                     const EdgeInsets.only(left: 16, right: 16),
                                 child: TextField(
                                   controller: _controller,
+                                  onChanged: (value) {
+                                    field.value['result']
+                                        ['inspection_form_comments'] = value;
+                                  },
                                   decoration: InputDecoration(
                                     labelText: "Comentarios",
                                     labelStyle:
@@ -622,8 +624,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                         fieldSub.value['result']
                                             ['inspection_form_comments'];
 
-                                    fieldSub.value['result']['inspection_form_comments'] = _controllerSub.text;
-
                                     return Container(
                                       margin: const EdgeInsets.all(15.0),
                                       decoration: BoxDecoration(
@@ -644,6 +644,11 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                           ),
                                           child: TextField(
                                             controller: _controllerSub,
+                                            onChanged: (value) {
+                                              fieldSub.value['result'][
+                                                      'inspection_form_comments'] =
+                                                  value;
+                                            },
                                             decoration: InputDecoration(
                                               labelText: "Comentarios",
                                               labelStyle: TextStyle(
