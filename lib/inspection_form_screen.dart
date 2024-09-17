@@ -169,7 +169,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           value['sub_sections'].forEach((subSection) {
             subSection['fields'].forEach((key, value) {
               value['result'] = value['result'] ?? {};
-              value['result']['inspection_form_comments'] = '';
+              value['result']['inspection_form_comments'] =
+                  value['result']['inspection_form_comments'] ?? '';
               value['images'] = _getImagesFromField(value);
             });
           });
