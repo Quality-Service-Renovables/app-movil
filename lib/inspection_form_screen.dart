@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
@@ -38,8 +39,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     if (pickedFiles != null) {
       setState(() {
         field.value['images'] ??= [];
-        field.value['images']
-            .addAll(pickedFiles.map((pickedFile) => pickedFile.path).toList());
+        field.value['images'].addAll(
+            pickedFiles.map((pickedFile) => File(pickedFile.path)).toList());
       });
     }
   }
@@ -52,7 +53,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     if (pickedFile != null) {
       setState(() {
         field.value['images'] ??= [];
-        field.value['images'].add(pickedFile.path);
+        field.value['images'].add(File(pickedFile.path));
       });
     }
   }
@@ -73,7 +74,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.file(image),
+              _image(image, from: 'full'),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text('Cerrar'),
@@ -152,6 +153,27 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       setState(() {
         _inspectionData = sections;
         _isLoading = false;
+
+        // Campos de las secciones
+        _inspectionData.forEach((key, value) {
+          value['fields'].forEach((key, value) {
+            value['result'] = value['result'] ?? {};
+            value['result']['inspection_form_comments'] =
+                value['result']['inspection_form_comments'] ?? '';
+            value['images'] = _getImagesFromField(value);
+          });
+        });
+
+        // Campos de las subsecciones
+        _inspectionData.forEach((key, value) {
+          value['sub_sections'].forEach((subSection) {
+            subSection['fields'].forEach((key, value) {
+              value['result'] = value['result'] ?? {};
+              value['result']['inspection_form_comments'] = '';
+              value['images'] = _getImagesFromField(value);
+            });
+          });
+        });
       });
     } else {
       showErrorDialog(
@@ -164,6 +186,16 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         ],
       );
     }
+  }
+
+  List<File> _getImagesFromField(field) {
+    final images = <File>[];
+    if (field['result'] != null && field['result']['evidences'] != null) {
+      for (var image in field['result']['evidences']) {
+        images.add(File("https://www.qsr.mx/" + image['inspection_evidence']));
+      }
+    }
+    return images;
   }
 
   Future<void> _refreshInspectionData() async {
@@ -242,7 +274,12 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     print("Controller:");
     field.value['result']['inspection_form_comments'] = controller.text;
     print('Saving field: ${field.key}');
+    print("Comments:");
     print(field.value['result']['inspection_form_comments']);
+    print("Images:");
+    print(field.value['images']);
+    print("Result:");
+    print(field.value['result']);
     /*final SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final inspectionUuid = widget.ctInspectionUuid;
@@ -283,6 +320,40 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         ],
       );
     }*/
+  }
+
+  Widget _image(File field, {String from = 'cover'}) {
+    String imagePath = field.path;
+
+    // Si la imagen es de internet
+    if (imagePath.startsWith('http') || imagePath.startsWith('www')) {
+      if (from == 'cover') {
+        return Image.network(
+          imagePath,
+          width: 100,
+          height: 100,
+        );
+      } else {
+        return Image.network(
+          imagePath,
+          fit: BoxFit.cover,
+        );
+      }
+    } else {
+      // Si la imagen es local (file path)
+      if (from == 'cover') {
+        return Image.file(
+          File(imagePath),
+          width: 100,
+          height: 100,
+        );
+      } else {
+        return Image.file(
+          File(imagePath),
+          fit: BoxFit.cover,
+        );
+      }
+    }
   }
 
   @override
@@ -334,20 +405,14 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                       // Campos
                       Column(
                         children: fields.entries.map((field) {
+                          print("FIELD...");
+                          print(field);
                           // Crea un TextEditingController para cada campo
                           TextEditingController _controller =
                               TextEditingController();
                           // Asigna el valor del result actual al controlador
-                          _controller.text = field.value['result'] != null
-                              ? field.value['result']
-                                  ['inspection_form_comments']
-                              : '';
-
-                          field.value['result'] = field.value['result'] != null
-                              ? field.value['result']
-                              : {
-                                  'inspection_form_comments': '',
-                                };
+                          _controller.text =
+                              field.value['result']['inspection_form_comments'];
 
                           return Container(
                             margin: const EdgeInsets.all(15.0),
@@ -445,14 +510,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                               ClipRRect(
                                                 borderRadius: BorderRadius.circular(
                                                     8.0), // Ajusta el radio del borde
-                                                child: Image.file(File(
-                                                  field.value['images'][index]),
-                                                  width:
-                                                      100, // Ajusta el ancho de las imágenes
-                                                  height:
-                                                      100, // Ajusta la altura de las imágenes
-                                                  fit: BoxFit.cover,
-                                                ),
+                                                child: _image(field
+                                                    .value['images'][index]),
                                               ),
                                               // Botón de eliminación en forma de "X"
                                               Positioned(
@@ -480,8 +539,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                 top: 0,
                                                 left: 0,
                                                 child: GestureDetector(
-                                                  onTap: () => _viewImage(File(field
-                                                      .value['images'][index])),
+                                                  onTap: () => _viewImage(field
+                                                      .value['images'][index]),
                                                   child: Container(
                                                     decoration: BoxDecoration(
                                                       color: Colors.blue,
@@ -555,17 +614,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                         TextEditingController();
                                     // Asigna el valor del result actual al controlador
                                     _controllerSub.text =
-                                        fieldSub.value['result'] != null
-                                            ? fieldSub.value['result']
-                                                ['inspection_form_comments']
-                                            : '';
-
-                                    fieldSub.value['result'] =
-                                        fieldSub.value['result'] != null
-                                            ? fieldSub.value['result']
-                                            : {
-                                                'inspection_form_comments': '',
-                                              };
+                                        fieldSub.value['result']
+                                            ['inspection_form_comments'];
 
                                     return Container(
                                       margin: const EdgeInsets.all(15.0),
@@ -677,21 +727,13 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                       children: [
                                                         // Imagen seleccionada con un tamaño pequeño
                                                         ClipRRect(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        8.0), // Ajusta el radio del borde
-                                                            child: Image.file(
-                                                              File(fieldSub
-                                                                          .value[
-                                                                      'images']
-                                                                  [index]),
-                                                              width:
-                                                                  100, // Ajusta el ancho de las imágenes
-                                                              height:
-                                                                  100, // Ajusta la altura de las imágenes
-                                                              fit: BoxFit.cover,
-                                                            )),
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                  8.0), // Ajusta el radio del borde
+                                                          child: _image(fieldSub
+                                                                  .value[
+                                                              'images'][index]),
+                                                        ),
                                                         // Botón de eliminación en forma de "X"
                                                         Positioned(
                                                           top: 0,
@@ -728,10 +770,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                           left: 0,
                                                           child:
                                                               GestureDetector(
-                                                            onTap: () => _viewImage(File(
+                                                            onTap: () => _viewImage(
                                                                 fieldSub.value[
                                                                         'images']
-                                                                    [index])),
+                                                                    [index]),
                                                             child: Container(
                                                               decoration:
                                                                   BoxDecoration(
