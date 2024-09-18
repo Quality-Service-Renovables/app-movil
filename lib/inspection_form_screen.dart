@@ -21,7 +21,6 @@ class InspectionFormScreen extends StatefulWidget {
 
 class _InspectionFormScreenState extends State<InspectionFormScreen> {
   Map<String, dynamic> _inspectionData = {};
-  Map<String, dynamic> _inspectionEvidences = {};
   bool _isLoading = true;
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
@@ -31,63 +30,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   void initState() {
     super.initState();
     _getFormInspection(widget.ctInspectionUuid);
-  }
-
-  // Método para seleccionar múltiples imágenes desde la galería
-  Future<void> _pickImages(field) async {
-    final List<XFile>? pickedFiles = await _picker.pickMultiImage();
-
-    if (pickedFiles != null) {
-      setState(() {
-        field.value['images'] ??= [];
-        field.value['images']
-            .addAll(pickedFiles.map((pickedFile) => pickedFile.path).toList());
-        _uploadIcon = Icons.cloud_sync;
-      });
-    }
-  }
-
-  // Método para tomar una foto con la cámara
-  Future<void> _takePhoto(field) async {
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.camera);
-
-    if (pickedFile != null) {
-      setState(() {
-        field.value['images'] ??= [];
-        field.value['images'].add(pickedFile.path);
-        _uploadIcon = Icons.cloud_sync;
-      });
-    }
-  }
-
-  // Método para eliminar una imagen seleccionada
-  void _removeImage(int index, field) {
-    setState(() {
-      field.value['images'].removeAt(index);
-      _uploadIcon = Icons.cloud_sync;
-    });
-  }
-
-  // Método para mostrar la imagen en un modal
-  void _viewImage(image) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _image(image, from: 'full'),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('Cerrar'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   Future<void> _getFormInspection(String ctInspectionUuid) async {
@@ -193,16 +135,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     }
   }
 
-  List<dynamic> _getImagesFromField(field) {
-    final images = [];
-    if (field['result'] != null && field['result']['evidences'] != null) {
-      for (var image in field['result']['evidences']) {
-        images.add("https://www.qsr.mx/" + image['inspection_evidence']);
-      }
-    }
-    return images;
-  }
-
   Future<void> _refreshInspectionData() async {
     await _getFormInspection(widget.ctInspectionUuid);
   }
@@ -281,61 +213,76 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     );
   }
 
-  Future<void> _saveField(field, controller) async {
-    print("Controller:");
-    field.value['result']['inspection_form_comments'] = controller.text;
-    print('Saving field: ${field.key}');
-    print("Comments:");
-    print(field.value['result']['inspection_form_comments']);
-    print("Images:");
-    print(field.value['images']);
-    print("Result:");
-    print(field.value['result']);
-    /*final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    final inspectionUuid = widget.ctInspectionUuid;
-    final fieldUuid = field.key;
-    final comments = field.value['comments'];
-    final images = field.value['images'];
+  // Método para seleccionar múltiples imágenes desde la galería
+  Future<void> _pickImages(field) async {
+    final List<XFile>? pickedFiles = await _picker.pickMultiImage();
 
-    final response = await http.post(
-      Uri.parse('https://qsr.mx/api/inspection/forms/save-field'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'ct_inspection_uuid': inspectionUuid,
-        'ct_inspection_form_uuid': fieldUuid,
-        'comments': comments,
-        'images': images,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final jsonResponse = json.decode(response.body);
-      final data = jsonResponse['data'];
-
+    if (pickedFiles != null) {
       setState(() {
-        field['comments'] = data['comments'];
-        field['images'] = data['images'];
+        field.value['images'] ??= [];
+        field.value['images']
+            .addAll(pickedFiles.map((pickedFile) => pickedFile.path).toList());
+        _uploadIcon = Icons.cloud_sync;
       });
-    } else {
-      showErrorDialog(
-        context,
-        'QSR Checklist',
-        [
-          'No se pudo guardar la información.',
-          'Revise su conexión a internet.',
-          'Si el problema persiste contacte al administrador.',
-        ],
-      );
-    }*/
+    }
   }
 
-  Widget _image(imagePath, {String from = 'cover'}) {
-    //String imagePath = field.path;
+  // Método para tomar una foto con la cámara
+  Future<void> _takePhoto(field) async {
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.camera);
 
+    if (pickedFile != null) {
+      setState(() {
+        field.value['images'] ??= [];
+        field.value['images'].add(pickedFile.path);
+        _uploadIcon = Icons.cloud_sync;
+      });
+    }
+  }
+
+  // Método para eliminar una imagen seleccionada
+  void _removeImage(int index, field) {
+    setState(() {
+      field.value['images'].removeAt(index);
+      _uploadIcon = Icons.cloud_sync;
+    });
+  }
+
+  // Método para mostrar la imagen en un modal
+  void _viewImage(image) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _image(image, from: 'full'),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('Cerrar'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Método para obtener las imágenes de un campo que ya tiene imágenes de la base de datos
+  List<dynamic> _getImagesFromField(field) {
+    final images = [];
+    if (field['result'] != null && field['result']['evidences'] != null) {
+      for (var image in field['result']['evidences']) {
+        images.add("https://www.qsr.mx/" + image['inspection_evidence']);
+      }
+    }
+    return images;
+  }
+
+  // Metodo para mostrar la imagen en un widget
+  Widget _image(imagePath, {String from = 'cover'}) {
     // Si la imagen es de internet
     if (imagePath.startsWith('http') || imagePath.startsWith('www')) {
       if (from == 'cover') {
@@ -579,36 +526,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                           );
                                         }),
                                       )),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment
-                                    .center, // Esto centra los botones horizontalmente
-                                children: [
-                                  Expanded(
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                            color: Colors.grey), // Añadir borde
-                                        borderRadius: BorderRadius.circular(
-                                            8.0), // Borde redondeado opcional
-                                      ),
-                                      margin: EdgeInsets.only(
-                                          left: 16,
-                                          right: 16,
-                                          bottom:
-                                              16), // Espaciado opcional alrededor del botón
-                                      child: IconButton(
-                                        icon: const Icon(Icons.save),
-                                        onPressed: () =>
-                                            _saveField(field, _controller),
-                                        style: ButtonStyle(
-                                          iconColor: WidgetStateProperty.all(
-                                              Colors.green),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
                             ]),
                           );
                         }).toList(),
@@ -826,39 +743,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                     );
                                                   }),
                                                 )),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment
-                                              .center, // Esto centra los botones horizontalmente
-                                          children: [
-                                            Expanded(
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  border: Border.all(
-                                                      color: Colors
-                                                          .grey), // Añadir borde
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          8.0), // Borde redondeado opcional
-                                                ),
-                                                margin: EdgeInsets.only(
-                                                    left: 16,
-                                                    right: 16,
-                                                    bottom:
-                                                        16), // Espaciado opcional alrededor del botón
-                                                child: IconButton(
-                                                  icon: const Icon(Icons.save),
-                                                  onPressed: () => _saveField(
-                                                      fieldSub, _controllerSub),
-                                                  style: ButtonStyle(
-                                                    iconColor:
-                                                        WidgetStateProperty.all(
-                                                            Colors.green),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
                                       ]),
                                     );
                                   }).toList(),
