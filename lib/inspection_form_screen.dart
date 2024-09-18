@@ -93,15 +93,12 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     );
 
     if (maps.isNotEmpty) {
-      final jsonData = jsonDecode(maps.first['json_form']);
-      final Map<String, dynamic> sections = jsonData['sections'] ?? {};
-
       setState(() {
-        _inspectionData = sections;
+        _inspectionData = jsonDecode(maps.first['json_form']);
         _isLoading = false;
 
         // Campos de las secciones
-        _inspectionData.forEach((key, value) {
+        _inspectionData['sections'].forEach((key, value) {
           value['fields'].forEach((key, value) {
             value['result'] = value['result'] ?? {};
             value['result']['inspection_form_comments'] =
@@ -111,7 +108,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         });
 
         // Campos de las subsecciones
-        _inspectionData.forEach((key, value) {
+        _inspectionData['sections'].forEach((key, value) {
           value['sub_sections'].forEach((subSection) {
             subSection['fields'].forEach((key, value) {
               value['result'] = value['result'] ?? {};
@@ -350,13 +347,14 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(10),
                 // Secciones
-                children: _inspectionData.entries.map((entry) {
-                  final fields = entry.value['fields'] as Map<String, dynamic>;
-                  final subsections =
-                      entry.value['sub_sections'] as List<dynamic>;
+                children: (_inspectionData['sections'] as Map)
+                    .values
+                    .map<Widget>((entry) {
+                  final fields = entry['fields'] as Map<String, dynamic>;
+                  final subsections = entry['sub_sections'] as List<dynamic>;
 
                   return ExpansionTile(
-                    title: Text(entry.value['section_details']
+                    title: Text(entry['section_details']
                         ['ct_inspection_section'] as String),
                     subtitle: const Text("Sección"),
                     textColor: Colors.blueAccent,
