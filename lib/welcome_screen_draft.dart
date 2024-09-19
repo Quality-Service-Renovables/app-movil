@@ -3,6 +3,7 @@ import 'logout_service.dart'; // Importa el servicio de logout
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'utils/constants.dart';
 
 class WelcomeScreen extends StatefulWidget {
   @override
@@ -24,7 +25,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     final token = prefs.getString('token');
 
     final response = await http.get(
-      Uri.parse('https://qsr.mx/api/application/sync'),
+      Uri.parse(Constants.apiEndpoint + '/api/application/sync'),
       headers: {
         'Authorization': 'Bearer $token',
       },

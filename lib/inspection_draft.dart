@@ -5,6 +5,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'utils/constants.dart';
 
 class InspectionFormScreen extends StatefulWidget {
   final String ctInspectionUuid;
@@ -80,7 +81,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   Future<void> _fetchAndSaveForm(Database db, String ctInspectionUuid) async {
-    final response = await http.get(Uri.parse('https://qsr.mx/api/inspection/forms/get-form/$ctInspectionUuid'));
+    final response = await http.get(Uri.parse(Constants.apiEndpoint + '/api/inspection/forms/get-form/$ctInspectionUuid'));
 
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
@@ -109,7 +110,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   Future<void> _fetchAndUpdateForm(Database db, String ctInspectionUuid) async {
-    final response = await http.get(Uri.parse('https://qsr.mx/api/inspection/forms/get-form/$ctInspectionUuid'));
+    final response = await http.get(Uri.parse(Constants.apiEndpoint + '/api/inspection/forms/get-form/$ctInspectionUuid'));
 
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);

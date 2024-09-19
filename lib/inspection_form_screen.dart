@@ -9,6 +9,7 @@ import 'logout_service.dart'; // Importa el servicio de logout
 import 'helpers.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'utils/constants.dart';
 
 class InspectionFormScreen extends StatefulWidget {
   final String ctInspectionUuid;
@@ -73,7 +74,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final response = await http.get(
-      Uri.parse('https://qsr.mx/api/inspection/forms/get-form/' +
+      Uri.parse(Constants.apiEndpoint + '/api/inspection/forms/get-form/' +
           widget.ctInspectionUuid +
           '?in_process=true'),
       headers: {
@@ -291,7 +292,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     final images = [];
     if (field['result'] != null && field['result']['evidences'] != null) {
       for (var image in field['result']['evidences']) {
-        images.add("https://www.qsr.mx/" + image['inspection_evidence']);
+        images.add(Constants.apiEndpoint + "/" + image['inspection_evidence']);
       }
     }
     return images;

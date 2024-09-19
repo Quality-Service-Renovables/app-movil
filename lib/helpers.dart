@@ -1,6 +1,7 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'utils/constants.dart';
 
 Future<bool> checkInternetConnection() async {
   // Primero, verifica si el dispositivo está conectado a una red.
@@ -9,7 +10,7 @@ Future<bool> checkInternetConnection() async {
   if (connectivityResult != ConnectivityResult.none) {
     // Si está conectado a una red, realiza una solicitud HTTP a un servidor confiable.
     try {
-      final response = await http.get(Uri.parse('https://qsr.mx')).timeout(const Duration(seconds: 5));
+      final response = await http.get(Uri.parse(Constants.apiEndpoint)).timeout(const Duration(seconds: 5));
 
       // Si la solicitud es exitosa y el código de estado es 200, hay acceso a Internet.
       if (response.statusCode == 200) {

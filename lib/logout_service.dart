@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'database_helper.dart';
 import 'login_screen.dart';
+import 'utils/constants.dart';
 
 class LogoutService {
   static Future<void> logout(BuildContext context) async {
@@ -12,7 +13,7 @@ class LogoutService {
 
     if (token != null) {
       final response = await http.post(
-        Uri.parse('https://qsr.mx/api/session/logout'),
+        Uri.parse(Constants.apiEndpoint + '/api/session/logout'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',

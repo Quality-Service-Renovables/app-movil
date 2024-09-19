@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'helpers.dart'; // Importa el helper
+import 'utils/constants.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -43,7 +44,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     final now = DateTime.now().toIso8601String();
 
     final response = await http.get(
-      Uri.parse('https://qsr.mx/api/application/sync'),
+      Uri.parse('${Constants.apiEndpoint}/api/application/sync'),
       headers: {
         'Authorization': 'Bearer $token',
       },

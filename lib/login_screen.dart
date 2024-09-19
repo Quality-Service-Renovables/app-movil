@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'database_helper.dart';
 import 'welcome_screen.dart';
+import 'utils/constants.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -49,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     final response = await http.post(
-      Uri.parse('https://qsr.mx/api/session/login'),
+      Uri.parse(Constants.apiEndpoint + '/api/session/login'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
