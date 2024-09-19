@@ -122,13 +122,16 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       _inspectionData = jsonDecode(maps.first['json_form']);
       _isLoading = false;
 
+      print("INSPECTION DATA:");
+      debugPrint(jsonEncode(_inspectionData), wrapWidth: 1024);
+
       // Campos de las secciones
       _inspectionData['sections'].forEach((key, value) {
         value['fields'].forEach((key, value) {
           value['result'] = value['result'] ?? {};
           value['result']['inspection_form_comments'] =
               value['result']['inspection_form_comments'] ?? '';
-          value['images'] = _getImagesFromField(value);
+          value['images'] = value['images'] ?? _getImagesFromField(value);
         });
       });
 
@@ -139,7 +142,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
             value['result'] = value['result'] ?? {};
             value['result']['inspection_form_comments'] =
                 value['result']['inspection_form_comments'] ?? '';
-            value['images'] = _getImagesFromField(value);
+            value['images'] = value['images'] ?? _getImagesFromField(value);
           });
         });
       });
