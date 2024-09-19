@@ -131,7 +131,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           value['result'] = value['result'] ?? {};
           value['result']['inspection_form_comments'] =
               value['result']['inspection_form_comments'] ?? '';
-          value['images'] = value['images'] ?? _getImagesFromField(value);
+          value['evidences'] = value['evidences'] ?? _getImagesFromField(value);
         });
       });
 
@@ -142,7 +142,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
             value['result'] = value['result'] ?? {};
             value['result']['inspection_form_comments'] =
                 value['result']['inspection_form_comments'] ?? '';
-            value['images'] = value['images'] ?? _getImagesFromField(value);
+            value['evidences'] = value['evidences'] ?? _getImagesFromField(value);
           });
         });
       });
@@ -235,8 +235,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
 
     if (pickedFiles != null) {
       setState(() {
-        field.value['images'] ??= [];
-        field.value['images']
+        field.value['evidences'] ??= [];
+        field.value['evidences']
             .addAll(pickedFiles.map((pickedFile) => pickedFile.path).toList());
         _uploadIcon = Icons.save;
       });
@@ -250,8 +250,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
 
     if (pickedFile != null) {
       setState(() {
-        field.value['images'] ??= [];
-        field.value['images'].add(pickedFile.path);
+        field.value['evidences'] ??= [];
+        field.value['evidences'].add(pickedFile.path);
         _uploadIcon = Icons.save;
       });
     }
@@ -260,7 +260,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   // Método para eliminar una imagen seleccionada
   void _removeImage(int index, field) {
     setState(() {
-      field.value['images'].removeAt(index);
+      field.value['evidences'].removeAt(index);
       _uploadIcon = Icons.save;
     });
   }
@@ -475,7 +475,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                   ),
                                 ],
                               ),
-                              field.value['images'] == null
+                              field.value['evidences'] == null
                                   ? Text(
                                       'No se han selecionado imagenes.',
                                       textAlign: TextAlign.left,
@@ -486,7 +486,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                         spacing: 10,
                                         runSpacing: 10,
                                         children: List.generate(
-                                            field.value['images'].length,
+                                            field.value['evidences'].length,
                                             (index) {
                                           return Stack(
                                             children: [
@@ -495,7 +495,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                 borderRadius: BorderRadius.circular(
                                                     8.0), // Ajusta el radio del borde
                                                 child: _image(field
-                                                    .value['images'][index]),
+                                                    .value['evidences'][index]),
                                               ),
                                               // Botón de eliminación en forma de "X"
                                               Positioned(
@@ -524,7 +524,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                 left: 0,
                                                 child: GestureDetector(
                                                   onTap: () => _viewImage(field
-                                                      .value['images'][index]),
+                                                      .value['evidences'][index]),
                                                   child: Container(
                                                     decoration: BoxDecoration(
                                                       color: Colors.blue,
@@ -670,7 +670,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                             ),
                                           ],
                                         ),
-                                        fieldSub.value['images'] == null
+                                        fieldSub.value['evidences'] == null
                                             ? Text(
                                                 'No images selected.',
                                                 textAlign: TextAlign.left,
@@ -682,7 +682,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                   spacing: 10,
                                                   runSpacing: 10,
                                                   children: List.generate(
-                                                      fieldSub.value['images']
+                                                      fieldSub.value['evidences']
                                                           .length, (index) {
                                                     return Stack(
                                                       children: [
@@ -693,7 +693,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                                   8.0), // Ajusta el radio del borde
                                                           child: _image(fieldSub
                                                                   .value[
-                                                              'images'][index]),
+                                                              'evidences'][index]),
                                                         ),
                                                         // Botón de eliminación en forma de "X"
                                                         Positioned(
@@ -733,7 +733,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                               GestureDetector(
                                                             onTap: () => _viewImage(
                                                                 fieldSub.value[
-                                                                        'images']
+                                                                        'evidences']
                                                                     [index]),
                                                             child: Container(
                                                               decoration:
