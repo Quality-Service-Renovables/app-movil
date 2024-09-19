@@ -12,8 +12,9 @@ import 'dart:io';
 
 class InspectionFormScreen extends StatefulWidget {
   final String ctInspectionUuid;
+  final String inspectionUuid;
 
-  const InspectionFormScreen({super.key, required this.ctInspectionUuid});
+  const InspectionFormScreen({super.key, required this.ctInspectionUuid, required this.inspectionUuid});
 
   @override
   _InspectionFormScreenState createState() => _InspectionFormScreenState();
@@ -24,38 +25,58 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   bool _isLoading = true;
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
-  IconData _uploadIcon = Icons.cloud_sync;
+  IconData _uploadIcon = Icons.save_as;
 
   @override
   void initState() {
     super.initState();
-    _getFormInspection(widget.ctInspectionUuid);
+    _getFormInspection();
   }
 
-  Future<void> _getFormInspection(String ctInspectionUuid) async {
+  Future<void> _getFormInspection() async {
+    print("inspection_uuid"+widget.inspectionUuid);
     final hasConnection = await checkInternetConnection();
     final db = await DatabaseHelper().database;
-    if (hasConnection) {
-      await _updateFormInspection(db, widget.ctInspectionUuid);
+    final List<Map<String, dynamic>> inspectionForm = await db.query(
+    'inspection_forms',
+    columns: ['json_form'],
+    where: 'inspection_uuid = ?',
+    whereArgs: [widget.inspectionUuid],
+    );
+
+    if (inspectionForm.isNotEmpty) {
+      await _getFormFromDatabase(db);
+    } else if (inspectionForm.isEmpty && hasConnection) {
+      await _updateFormInspection(db);
+      await _getFormFromDatabase(db);
+    } else if (inspectionForm.isEmpty && ! hasConnection) {
+      showErrorDialog(
+        context,
+        'QSR Checklist',
+        [
+          'No se encontró checklist, no es posible continuar.',
+          'Revise se conexión.',
+          'Si el problema persiste contacte al administrador.',
+        ],
+      );
     }
-    await _getFormFromDatabase(db, ctInspectionUuid);
   }
 
   Future<void> _updateFormInspection(
-      Database db, String ctInspectionUuid) async {
+      Database db) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final response = await http.get(
       Uri.parse(
-          'https://qsr.mx/api/inspection/forms/get-form/$ctInspectionUuid'),
+          'https://qsr.mx/api/inspection/forms/get-form/'+widget.ctInspectionUuid+'?in_process=true'),
       headers: {
         'Authorization': 'Bearer $token',
       },
     );
 
-    print("ctInspectionUuid: " + ctInspectionUuid);
-
     final jsonResponse = json.decode(response.body);
+
+    print('get form inspection response: $jsonResponse');
 
     if (response.statusCode == 200) {
       final data = jsonResponse['data'];
@@ -64,7 +85,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       await db.insert(
         'inspection_forms',
         {
-          'ct_inspection_uuid': ctInspectionUuid,
+          'inspection_uuid': widget.inspectionUuid,
           'json_form': jsonEncode(data),
           'created_at': now,
           'updated_at': now,
@@ -84,56 +105,43 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   Future<void> _getFormFromDatabase(
-      Database db, String ctInspectionUuid) async {
+      Database db) async {
     final List<Map<String, dynamic>> maps = await db.query(
       'inspection_forms',
       columns: ['json_form'],
-      where: 'ct_inspection_uuid = ?',
-      whereArgs: [ctInspectionUuid],
+      where: 'inspection_uuid = ?',
+      whereArgs: [widget.inspectionUuid],
     );
+    setState(() {
+      _inspectionData = jsonDecode(maps.first['json_form']);
+      _isLoading = false;
 
-    if (maps.isNotEmpty) {
-      setState(() {
-        _inspectionData = jsonDecode(maps.first['json_form']);
-        _isLoading = false;
+      // Campos de las secciones
+      _inspectionData['sections'].forEach((key, value) {
+        value['fields'].forEach((key, value) {
+          value['result'] = value['result'] ?? {};
+          value['result']['inspection_form_comments'] =
+              value['result']['inspection_form_comments'] ?? '';
+          value['images'] = _getImagesFromField(value);
+        });
+      });
 
-        // Campos de las secciones
-        _inspectionData['sections'].forEach((key, value) {
-          value['fields'].forEach((key, value) {
+      // Campos de las subsecciones
+      _inspectionData['sections'].forEach((key, value) {
+        value['sub_sections'].forEach((subSection) {
+          subSection['fields'].forEach((key, value) {
             value['result'] = value['result'] ?? {};
             value['result']['inspection_form_comments'] =
                 value['result']['inspection_form_comments'] ?? '';
             value['images'] = _getImagesFromField(value);
           });
         });
-
-        // Campos de las subsecciones
-        _inspectionData['sections'].forEach((key, value) {
-          value['sub_sections'].forEach((subSection) {
-            subSection['fields'].forEach((key, value) {
-              value['result'] = value['result'] ?? {};
-              value['result']['inspection_form_comments'] =
-                  value['result']['inspection_form_comments'] ?? '';
-              value['images'] = _getImagesFromField(value);
-            });
-          });
-        });
       });
-    } else {
-      showErrorDialog(
-        context,
-        'QSR Checklist',
-        [
-          'No se encontró checklist, no es posible continuar.',
-          'Revise se conexión.',
-          'Si el problema persiste contacte al administrador.',
-        ],
-      );
-    }
+    });
   }
 
   Future<void> _refreshInspectionData() async {
-    await _getFormInspection(widget.ctInspectionUuid);
+    await _getFormInspection();
   }
 
   Future<void> _confirmChanges() async {
@@ -152,7 +160,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       await db.insert(
         'inspection_forms',
         {
-          'ct_inspection_uuid': widget.ctInspectionUuid,
+          'inspection_uuid': widget.inspectionUuid,
           'json_form': jsonData,
           'created_at': now,
           'updated_at': now,
@@ -163,12 +171,12 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       // Consulta el registro guardado para depuración
       final List<Map<String, dynamic>> result = await db.query(
         'inspection_forms',
-        where: 'ct_inspection_uuid = ?',
-        whereArgs: [widget.ctInspectionUuid],
+        where: 'inspection_uuid = ?',
+        whereArgs: [widget.inspectionUuid],
       );
       // Cambia el ícono a cloud_done
       setState(() {
-        _uploadIcon = Icons.cloud_done;
+        _uploadIcon = Icons.save;
         _isUploading = false;
       });
       print('Registro guardado: $result');
@@ -219,7 +227,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         field.value['images'] ??= [];
         field.value['images']
             .addAll(pickedFiles.map((pickedFile) => pickedFile.path).toList());
-        _uploadIcon = Icons.cloud_sync;
+        _uploadIcon = Icons.save;
       });
     }
   }
@@ -233,7 +241,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       setState(() {
         field.value['images'] ??= [];
         field.value['images'].add(pickedFile.path);
-        _uploadIcon = Icons.cloud_sync;
+        _uploadIcon = Icons.save;
       });
     }
   }
@@ -242,7 +250,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   void _removeImage(int index, field) {
     setState(() {
       field.value['images'].removeAt(index);
-      _uploadIcon = Icons.cloud_sync;
+      _uploadIcon = Icons.save;
     });
   }
 
@@ -391,7 +399,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                     field.value['result']
                                         ['inspection_form_comments'] = value;
                                     setState(() {
-                                      _uploadIcon = Icons.cloud_sync;
+                                      _uploadIcon = Icons.save;
                                     });
                                   },
                                   decoration: InputDecoration(
@@ -577,7 +585,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                       'inspection_form_comments'] =
                                                   value;
                                               setState(() {
-                                                _uploadIcon = Icons.cloud_sync;
+                                                _uploadIcon = Icons.save;
                                               });
                                             },
                                             decoration: InputDecoration(

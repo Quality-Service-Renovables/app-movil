@@ -20,6 +20,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   void initState() {
     super.initState();
     _projects = widget.projects;
+    print('Projects: $_projects');
   }
 
   Future<void> _refreshProjects() async {
@@ -55,6 +56,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             final projectName = _projects[index]['project_name'];
             final projectDescription = _projects[index]['description'];
             final ctInspectionUuid = _projects[index]['ct_inspection_uuid']; // Recupera el UUID
+            final inspectionUuid = _projects[index]['inspection_uuid']; // Recupera el UUID
 
             return Card(
               shape: RoundedRectangleBorder(
@@ -66,13 +68,26 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 subtitle: Html(
                   data: projectDescription,
                 ),
+                trailing: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.blue, // Color de fondo azul
+                    shape: BoxShape.circle, // Forma redondeada
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.cloud_sync, color: Colors.white), // Ícono con color blanco
+                    onPressed: () {
+                      // Acción al presionar el botón
+                      print('Botón presionado en el proyecto: $projectName');
+                    },
+                  ),
+                ),
                 onTap: () {
                   // Navega a la pantalla de inspección al hacer tap
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => InspectionFormScreen(
-                        ctInspectionUuid: ctInspectionUuid,
+                        ctInspectionUuid: ctInspectionUuid, inspectionUuid: inspectionUuid
                       ),
                     ),
                   );
