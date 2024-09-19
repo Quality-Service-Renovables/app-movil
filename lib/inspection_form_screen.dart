@@ -14,7 +14,10 @@ class InspectionFormScreen extends StatefulWidget {
   final String ctInspectionUuid;
   final String inspectionUuid;
 
-  const InspectionFormScreen({super.key, required this.ctInspectionUuid, required this.inspectionUuid});
+  const InspectionFormScreen(
+      {super.key,
+      required this.ctInspectionUuid,
+      required this.inspectionUuid});
 
   @override
   _InspectionFormScreenState createState() => _InspectionFormScreenState();
@@ -34,22 +37,26 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   Future<void> _getFormInspection() async {
-    print("inspection_uuid"+widget.inspectionUuid);
+    print("inspection_uuid" + widget.inspectionUuid);
     final hasConnection = await checkInternetConnection();
     final db = await DatabaseHelper().database;
     final List<Map<String, dynamic>> inspectionForm = await db.query(
-    'inspection_forms',
-    columns: ['json_form'],
-    where: 'inspection_uuid = ?',
-    whereArgs: [widget.inspectionUuid],
+      'inspection_forms',
+      columns: ['json_form'],
+      where: 'inspection_uuid = ?',
+      whereArgs: [widget.inspectionUuid],
     );
 
     if (inspectionForm.isNotEmpty) {
+      print("Entro a 1- _getFormFromDatabase");
       await _getFormFromDatabase(db);
     } else if (inspectionForm.isEmpty && hasConnection) {
+      print("2 - Entro a _updateFormInspection");
       await _updateFormInspection(db);
       await _getFormFromDatabase(db);
-    } else if (inspectionForm.isEmpty && ! hasConnection) {
+      print("3 - Entro a _getFormFromDatabase");
+    } else if (inspectionForm.isEmpty && !hasConnection) {
+      print("4 - Entro a _showErrorDialog");
       showErrorDialog(
         context,
         'QSR Checklist',
@@ -62,13 +69,13 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     }
   }
 
-  Future<void> _updateFormInspection(
-      Database db) async {
+  Future<void> _updateFormInspection(Database db) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final response = await http.get(
-      Uri.parse(
-          'https://qsr.mx/api/inspection/forms/get-form/'+widget.ctInspectionUuid+'?in_process=true'),
+      Uri.parse('https://qsr.mx/api/inspection/forms/get-form/' +
+          widget.ctInspectionUuid +
+          '?in_process=true'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -104,8 +111,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     }
   }
 
-  Future<void> _getFormFromDatabase(
-      Database db) async {
+  Future<void> _getFormFromDatabase(Database db) async {
     final List<Map<String, dynamic>> maps = await db.query(
       'inspection_forms',
       columns: ['json_form'],
@@ -148,8 +154,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     setState(() {
       _isUploading = true;
     });
-    print("JSON FORM:");
-    debugPrint(jsonEncode(_inspectionData), wrapWidth: 1024);
+    //print("JSON FORM:");
+    //debugPrint(jsonEncode(_inspectionData), wrapWidth: 1024);
     final hasConnection = await checkInternetConnection();
 
     if (hasConnection) {
@@ -179,7 +185,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         _uploadIcon = Icons.save;
         _isUploading = false;
       });
-      print('Registro guardado: $result');
+      //print('Registro guardado: $result');
+      print("Registro guardado: ");
+      debugPrint(jsonData, wrapWidth: 1024);
     } else {
       showErrorDialog(
         context,
@@ -371,14 +379,16 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                       // Campos
                       Column(
                         children: fields.entries.map((field) {
-                          print("FIELD...");
-                          print(field);
+                          //print("FIELD...");
+                          //print(field);
                           // Crea un TextEditingController para cada campo
                           TextEditingController _controller =
                               TextEditingController();
+
                           // Asigna el valor del result actual al controlador
-                          _controller.text =
-                              field.value['result']['inspection_form_comments'];
+                          _controller.text = field.value['result']
+                                  ['inspection_form_comments'] ??
+                              '';
 
                           return Container(
                             margin: const EdgeInsets.all(15.0),
@@ -395,13 +405,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                     const EdgeInsets.only(left: 16, right: 16),
                                 child: TextField(
                                   controller: _controller,
-                                  onChanged: (value) {
-                                    field.value['result']
-                                        ['inspection_form_comments'] = value;
-                                    setState(() {
-                                      _uploadIcon = Icons.save;
-                                    });
-                                  },
                                   decoration: InputDecoration(
                                     labelText: "Comentarios",
                                     labelStyle:
@@ -416,6 +419,11 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                     ),
                                   ),
                                   cursorColor: Colors.red[900],
+                                  onChanged: (value) {
+                                    // Actualiza el valor del campo 'result'
+                                    field.value['result']
+                                        ['inspection_form_comments'] = value;
+                                  },
                                 ),
                               ),
                               Row(
@@ -558,7 +566,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                     // Asigna el valor del result actual al controlador
                                     _controllerSub.text =
                                         fieldSub.value['result']
-                                            ['inspection_form_comments'];
+                                                ['inspection_form_comments'] ??
+                                            '';
 
                                     return Container(
                                       margin: const EdgeInsets.all(15.0),
@@ -580,14 +589,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                           ),
                                           child: TextField(
                                             controller: _controllerSub,
-                                            onChanged: (value) {
-                                              fieldSub.value['result'][
-                                                      'inspection_form_comments'] =
-                                                  value;
-                                              setState(() {
-                                                _uploadIcon = Icons.save;
-                                              });
-                                            },
                                             decoration: InputDecoration(
                                               labelText: "Comentarios",
                                               labelStyle: TextStyle(
@@ -602,6 +603,12 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                               ),
                                             ),
                                             cursorColor: Colors.red[900],
+                                            onChanged: (value) {
+                                              // Actualiza el valor del campo 'result'
+                                              fieldSub.value['result'][
+                                                      'inspection_form_comments'] =
+                                                  value;
+                                            },
                                           ),
                                         ),
                                         Row(
