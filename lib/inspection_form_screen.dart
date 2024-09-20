@@ -76,8 +76,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final response = await http.get(
-      Uri.parse('${Constants.apiEndpoint}/api/inspection/forms/get-form/' +
-          widget.ctInspectionUuid +
+      Uri.parse('${Constants.apiEndpoint}/api/inspection/forms/get-form-inspection/' +
+          widget.inspectionUuid +
           '?in_process=true'),
       headers: {
         'Authorization': 'Bearer $token',
@@ -131,9 +131,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       // Campos de las secciones
       _inspectionData['sections'].forEach((key, value) {
         value['fields'].forEach((key, value) {
-          value['result'] = value['result'] ?? {};
-          value['result']['inspection_form_comments'] =
-              value['result']['inspection_form_comments'] ?? '';
+          value['content'] = value['content'] ?? {};
+          value['content']['inspection_form_comments'] =
+              value['content']['inspection_form_comments'] ?? '';
           value['evidences'] = value['evidences'] ?? _getImagesFromField(value);
         });
       });
@@ -142,9 +142,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       _inspectionData['sections'].forEach((key, value) {
         value['sub_sections'].forEach((subSection) {
           subSection['fields'].forEach((key, value) {
-            value['result'] = value['result'] ?? {};
-            value['result']['inspection_form_comments'] =
-                value['result']['inspection_form_comments'] ?? '';
+            value['content'] = value['content'] ?? {};
+            value['content']['inspection_form_comments'] =
+                value['content']['inspection_form_comments'] ?? '';
             value['evidences'] = value['evidences'] ?? _getImagesFromField(value);
           });
         });
@@ -292,8 +292,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   // Método para obtener las imágenes de un campo que ya tiene imágenes de la base de datos
   List<dynamic> _getImagesFromField(field) {
     final images = [];
-    if (field['result'] != null && field['result']['evidences'] != null) {
-      for (var image in field['result']['evidences']) {
+    if (field['content'] != null && field['content']['evidences'] != null) {
+      for (var image in field['content']['evidences']) {
         images.add("${Constants.apiEndpoint}/" + image['inspection_evidence']);
       }
     }
@@ -392,7 +392,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                               TextEditingController();
 
                           // Asigna el valor del result actual al controlador
-                          _controller.text = field.value['result']
+                          _controller.text = field.value['content']
                                   ['inspection_form_comments'] ??
                               '';
 
@@ -426,8 +426,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                   ),
                                   cursorColor: Colors.red[900],
                                   onChanged: (value) {
-                                    // Actualiza el valor del campo 'result'
-                                    field.value['result']
+                                    // Actualiza el valor del campo 'content'
+                                    field.value['content']
                                         ['inspection_form_comments'] = value;
                                   },
                                 ),
@@ -571,7 +571,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                         TextEditingController();
                                     // Asigna el valor del result actual al controlador
                                     _controllerSub.text =
-                                        fieldSub.value['result']
+                                        fieldSub.value['content']
                                                 ['inspection_form_comments'] ??
                                             '';
 
@@ -610,8 +610,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                             ),
                                             cursorColor: Colors.red[900],
                                             onChanged: (value) {
-                                              // Actualiza el valor del campo 'result'
-                                              fieldSub.value['result'][
+                                              // Actualiza el valor del campo 'content'
+                                              fieldSub.value['content'][
                                                       'inspection_form_comments'] =
                                                   value;
                                             },
