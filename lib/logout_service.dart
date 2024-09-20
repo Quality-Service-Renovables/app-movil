@@ -13,7 +13,7 @@ class LogoutService {
 
     if (token != null) {
       final response = await http.post(
-        Uri.parse(Constants.apiEndpoint + '/api/session/logout'),
+        Uri.parse('${Constants.apiEndpoint}/api/session/logout'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',

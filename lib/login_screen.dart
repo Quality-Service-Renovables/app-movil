@@ -50,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     final response = await http.post(
-      Uri.parse(Constants.apiEndpoint + '/api/session/login'),
+      Uri.parse('${Constants.apiEndpoint}/api/session/login'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },

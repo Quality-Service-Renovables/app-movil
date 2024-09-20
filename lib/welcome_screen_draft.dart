@@ -25,7 +25,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     final token = prefs.getString('token');
 
     final response = await http.get(
-      Uri.parse(Constants.apiEndpoint + '/api/application/sync'),
+      Uri.parse('${Constants.apiEndpoint}/api/application/sync'),
       headers: {
         'Authorization': 'Bearer $token',
       },

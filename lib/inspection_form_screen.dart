@@ -58,6 +58,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       print("3 - Entro a _getFormFromDatabase");
     } else if (inspectionForm.isEmpty && !hasConnection) {
       print("4 - Entro a _showErrorDialog");
+      print(inspectionForm.isEmpty);
+      print(hasConnection);
       showErrorDialog(
         context,
         'QSR Checklist',
@@ -74,7 +76,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final response = await http.get(
-      Uri.parse(Constants.apiEndpoint + '/api/inspection/forms/get-form/' +
+      Uri.parse('${Constants.apiEndpoint}/api/inspection/forms/get-form/' +
           widget.ctInspectionUuid +
           '?in_process=true'),
       headers: {
@@ -292,7 +294,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     final images = [];
     if (field['result'] != null && field['result']['evidences'] != null) {
       for (var image in field['result']['evidences']) {
-        images.add(Constants.apiEndpoint + "/" + image['inspection_evidence']);
+        images.add("${Constants.apiEndpoint}/" + image['inspection_evidence']);
       }
     }
     return images;
