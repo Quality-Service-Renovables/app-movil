@@ -140,6 +140,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
 
       // Campos de las subsecciones
       _inspectionData['sections'].forEach((key, value) {
+        value['sub_sections'] = value['sub_sections'] ?? [];
         value['sub_sections'].forEach((subSection) {
           subSection['fields'].forEach((key, value) {
             value['content'] = value['content'] ?? {};
