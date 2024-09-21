@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'helpers.dart';
 import 'logout_service.dart'; // Importa el servicio de logout
 import 'package:flutter_html/flutter_html.dart';
 import 'inspection_form_screen.dart';
@@ -43,6 +46,17 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   }
 
   Future<void> _syncWithProduction(String inspectionUuid) async {
+    // Muestra un mensaje de éxito.
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Sincronizando datos...'),
+        backgroundColor: Colors.teal, // Color verde
+      ),
+    );
+
+    var message = 'Sincronización fallida';
+    var color = Colors.red;
+
     // Lógica para sincronizar los datos con la producción.
     final db = await DatabaseHelper().database;
     final List<Map<String, dynamic>> inspectionForm = await db.query(
@@ -51,54 +65,115 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       where: 'inspection_uuid = ?',
       whereArgs: [inspectionUuid],
     );
+    //print('Inspection form:');
+    //printLargeString(inspectionForm.toString());
+    print('*******************************************************************EVIDENCES*******************************************************************');
+
 
     if (inspectionForm.isNotEmpty) {
       final _inspectionData = jsonDecode(inspectionForm.first['json_form']);
       dynamic data = [];
+      dynamic evidences = [];
 
       _inspectionData['sections'].forEach((key, value) {
         value['fields'].forEach((key, value) {
           if (value['content']['inspection_form_comments'].isNotEmpty) {
+            evidences = [];
+
+            if (value['content']['evidences'] != null) {
+              value['content']['evidences'].forEach((evidence) async {
+                if (evidence['inspection_evidence'] != null) {
+                  // Suponiendo que evidence['inspection_evidence'] contiene la ruta del archivo
+                  final file = File(evidence['inspection_evidence']);
+                  final bytes = await file.readAsBytes();
+                  final base64File = base64Encode(bytes);
+
+                  print('evidence');
+                  print(evidence['inspection_evidence']);
+                  evidences.add({
+                    'evidence_uuid': evidence['evidence_uuid'],
+                    'evidence_store': base64File,
+                  });
+                }
+              });
+            }
+            print('*******************************************************************EVIDENCES*******************************************************************');
             data.add({
               'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
               'inspection_form_comments': value['content']
-                  ['inspection_form_comments'],
-              'evidences':
-                  [] // Aqui mandamos a llama la funcion que devuelve las evidencias, tendria que sacarlas del campo
+              ['inspection_form_comments'],
+              'evidences': evidences
+              //[] // Aqui mandamos a llama la funcion que devuelve las evidencias, tendria que sacarlas del campo
             });
           }
+        });
+
+        value['sub_sections'] = value['sub_sections'] ?? [];
+        value['sub_sections'].forEach((subSection) {
+          subSection['fields'].forEach((key, value) {
+            print('valor de subsection');
+            print(value);
+            if (value['content']['inspection_form_comments'].isNotEmpty) {
+              data.add({
+                'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
+                'inspection_form_comments': value['content']
+                ['inspection_form_comments'],
+                'evidences':
+                [] // Aqui mandamos a llama la funcion que devuelve las evidencias, tendria que sacarlas del campo
+              });
+            }
+          });
         });
       });
 
       print("Data: ");
       print(data);
 
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      final response = await http.post(
-        Uri.parse(
-            '${Constants.apiEndpoint}/api/inspection/forms/set-form-inspection'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'inspection_uuid': inspectionUuid,
-          'form': data, // Enviar `data` sin serializar a cadena
-        }),
-      );
+      try {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('token');
+        final response = await http.post(
+          Uri.parse(
+              '${Constants.apiEndpoint}/api/inspection/forms/set-form-inspection'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({
+            'inspection_uuid': inspectionUuid,
+            'form': data, // Enviar `data` sin serializar a cadena
+          }),
+        );
 
-      final jsonResponse = json.decode(response.body);
-      print('Response: $jsonResponse');
+        final jsonResponse = json.decode(response.body);
+        print('Response: $jsonResponse');
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          message = 'Sincronización exitosa';
+          color = Colors.green;
+        }
+      } catch (e) {
+        message = 'Error durante la sincronización: $e';
+        color = Colors.red;
+      }
+
     }
+
 
     // Muestra un mensaje de éxito.
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Sincronización exitosa'),
-        backgroundColor: Colors.green, // Color verde
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color, // Color verde
       ),
     );
+  }
+
+  void printLargeString(String str) {
+    const int chunkSize = 800; // Tamaño del fragmento
+    for (int i = 0; i < str.length; i += chunkSize) {
+      print(str.substring(i, i + chunkSize > str.length ? str.length : i + chunkSize));
+    }
   }
 
   @override
@@ -171,3 +246,26 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     );
   }
 }
+
+
+/**
+ *
+    import 'dart:convert';
+    import 'dart:io';
+
+    // Suponiendo que evidence['inspection_evidence'] contiene la ruta del archivo
+    final file = File(evidence['inspection_evidence']);
+    final bytes = await file.readAsBytes();
+    final base64File = base64Encode(bytes);
+
+    data.add({
+    'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
+    'inspection_form_comments': value['content']['inspection_form_comments'],
+    'evidences': [
+    {
+    'evidence_uuid': evidence['evidence_uuid'],
+    'evidence_store': base64File,
+    }
+    ],
+    });
+ */
