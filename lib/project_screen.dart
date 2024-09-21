@@ -68,8 +68,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     //print('Inspection form:');
     //printLargeString(inspectionForm.toString());
     print('*******************************************************************EVIDENCES*******************************************************************');
-
-
     if (inspectionForm.isNotEmpty) {
       final _inspectionData = jsonDecode(inspectionForm.first['json_form']);
       dynamic data = [];
@@ -85,19 +83,23 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 if (evidence['inspection_evidence'] != null) {
                   // Suponiendo que evidence['inspection_evidence'] contiene la ruta del archivo
                   final file = File(evidence['inspection_evidence']);
-                  final bytes = await file.readAsBytes();
-                  final base64File = base64Encode(bytes);
 
-                  print('evidence');
-                  print(evidence['inspection_evidence']);
-                  evidences.add({
-                    'evidence_uuid': evidence['evidence_uuid'],
-                    'evidence_store': base64File,
-                  });
+                  if (await file.exists()) {
+                    final bytes = await file.readAsBytes();
+                    final base64File = base64Encode(bytes);
+
+                    print('evidence');
+                    print(evidence['inspection_evidence']);
+
+                    evidences.add({
+                      'evidence_uuid': evidence['evidence_uuid'],
+                      'evidence_store': base64File,
+                    });
+                  }
                 }
               });
             }
-            print('*******************************************************************EVIDENCES*******************************************************************');
+            print('******************************************************************* END EVIDENCES*******************************************************************');
             data.add({
               'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
               'inspection_form_comments': value['content']
