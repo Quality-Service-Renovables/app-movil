@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'logout_service.dart'; // Importa el servicio de logout
 import 'package:flutter_html/flutter_html.dart';
 import 'inspection_form_screen.dart';
+import 'database_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'utils/constants.dart';
+import 'dart:convert';
 
 class ProjectsScreen extends StatefulWidget {
   final List<dynamic> projects;
   final String title;
 
-  const ProjectsScreen({super.key, required this.projects, required this.title});
+  const ProjectsScreen(
+      {super.key, required this.projects, required this.title});
 
   @override
   _ProjectsScreenState createState() => _ProjectsScreenState();
@@ -31,8 +37,68 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
 
     // Actualiza el estado con los nuevos datos.
     setState(() {
-      _projects = List.from(_projects); // Aquí deberías asignar los nuevos datos.
+      _projects =
+          List.from(_projects); // Aquí deberías asignar los nuevos datos.
     });
+  }
+
+  Future<void> _syncWithProduction(String inspectionUuid) async {
+    // Lógica para sincronizar los datos con la producción.
+    final db = await DatabaseHelper().database;
+    final List<Map<String, dynamic>> inspectionForm = await db.query(
+      'inspection_forms',
+      columns: ['json_form'],
+      where: 'inspection_uuid = ?',
+      whereArgs: [inspectionUuid],
+    );
+
+    if (inspectionForm.isNotEmpty) {
+      final _inspectionData = jsonDecode(inspectionForm.first['json_form']);
+      dynamic data = [];
+
+      _inspectionData['sections'].forEach((key, value) {
+        value['fields'].forEach((key, value) {
+          if (value['content']['inspection_form_comments'].isNotEmpty) {
+            data.add({
+              'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
+              'inspection_form_comments': value['content']
+                  ['inspection_form_comments'],
+              'evidences':
+                  [] // Aqui mandamos a llama la funcion que devuelve las evidencias, tendria que sacarlas del campo
+            });
+          }
+        });
+      });
+
+      print("Data: ");
+      print(data);
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      final response = await http.post(
+        Uri.parse(
+            '${Constants.apiEndpoint}/api/inspection/forms/set-form-inspection'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'inspection_uuid': inspectionUuid,
+          'form': data, // Enviar `data` sin serializar a cadena
+        }),
+      );
+
+      final jsonResponse = json.decode(response.body);
+      print('Response: $jsonResponse');
+    }
+
+    // Muestra un mensaje de éxito.
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Sincronización exitosa'),
+        backgroundColor: Colors.green, // Color verde
+      ),
+    );
   }
 
   @override
@@ -43,7 +109,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => LogoutService.logout(context), // Utiliza el servicio de logout
+            onPressed: () =>
+                LogoutService.logout(context), // Utiliza el servicio de logout
           ),
         ],
       ),
@@ -55,8 +122,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           itemBuilder: (context, index) {
             final projectName = _projects[index]['project_name'];
             final projectDescription = _projects[index]['description'];
-            final ctInspectionUuid = _projects[index]['ct_inspection_uuid']; // Recupera el UUID
-            final inspectionUuid = _projects[index]['inspection_uuid']; // Recupera el UUID
+            final ctInspectionUuid =
+                _projects[index]['ct_inspection_uuid']; // Recupera el UUID
+            final inspectionUuid =
+                _projects[index]['inspection_uuid']; // Recupera el UUID
 
             return Card(
               shape: RoundedRectangleBorder(
@@ -74,10 +143,12 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                     shape: BoxShape.circle, // Forma redondeada
                   ),
                   child: IconButton(
-                    icon: Icon(Icons.cloud_sync, color: Colors.white), // Ícono con color blanco
+                    icon: Icon(Icons.cloud_sync,
+                        color: Colors.white), // Ícono con color blanco
                     onPressed: () {
                       // Acción al presionar el botón
-                      print('Botón presionado en el proyecto: $projectName');
+                      _syncWithProduction(
+                          inspectionUuid); // Llama a la función _sync
                     },
                   ),
                 ),
@@ -87,8 +158,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => InspectionFormScreen(
-                        ctInspectionUuid: ctInspectionUuid, inspectionUuid: inspectionUuid
-                      ),
+                          ctInspectionUuid: ctInspectionUuid,
+                          inspectionUuid: inspectionUuid),
                     ),
                   );
                 },
