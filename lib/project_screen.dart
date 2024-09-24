@@ -78,21 +78,21 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           if (value['content']['inspection_form_comments'].isNotEmpty) {
             evidences = [];
 
-            if (value['content']['evidences'] != null) {
-              value['content']['evidences'].forEach((evidence) async {
-                if (evidence['inspection_evidence'] != null) {
+            if (['evidences'] != null) {
+              value['evidences'].forEach((evidence) async {
+                if (evidence != null) {
                   // Suponiendo que evidence['inspection_evidence'] contiene la ruta del archivo
-                  final file = File(evidence['inspection_evidence']);
+                  final file = File(evidence);
 
                   if (await file.exists()) {
                     final bytes = await file.readAsBytes();
                     final base64File = base64Encode(bytes);
 
                     print('evidence');
-                    print(evidence['inspection_evidence']);
+                    print(evidence);
 
                     evidences.add({
-                      'evidence_uuid': evidence['evidence_uuid'],
+                      'inspection_uuid': inspectionUuid,
                       'evidence_store': base64File,
                     });
                   }
@@ -100,6 +100,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
               });
             }
             print('******************************************************************* END EVIDENCES*******************************************************************');
+            
             data.add({
               'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
               'inspection_form_comments': value['content']

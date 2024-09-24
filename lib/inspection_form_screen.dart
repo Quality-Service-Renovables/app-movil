@@ -92,6 +92,32 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       final data = jsonResponse['data'];
       final now = DateTime.now().toIso8601String();
 
+      // Campos de las secciones
+      data['sections'].forEach((key, value) {
+        value['fields'].forEach((key, value) {
+          value['content'] = value['content'] ?? {};
+          value['content']['inspection_form_comments'] =
+              value['content']['inspection_form_comments'] ?? '';
+          value['evidences'] = value['evidences'] ?? _getImagesFromField(value);
+        });
+      });
+
+      // Campos de las subsecciones
+      data['sections'].forEach((key, value) {
+        value['sub_sections'] = value['sub_sections'] ?? [];
+        value['sub_sections'].forEach((subSection) {
+          subSection['fields'].forEach((key, value) {
+            value['content'] = value['content'] ?? {};
+            value['content']['inspection_form_comments'] =
+                value['content']['inspection_form_comments'] ?? '';
+            value['evidences'] = value['evidences'] ?? _getImagesFromField(value);
+          });
+        });
+      });
+
+      print("----data to save----");
+      printPrettyJson(data);
+
       await db.insert(
         'inspection_forms',
         {
@@ -124,32 +150,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     setState(() {
       _inspectionData = jsonDecode(maps.first['json_form']);
       _isLoading = false;
-
-      print("INSPECTION DATA:");
-      debugPrint(jsonEncode(_inspectionData), wrapWidth: 1024);
-
-      // Campos de las secciones
-      _inspectionData['sections'].forEach((key, value) {
-        value['fields'].forEach((key, value) {
-          value['content'] = value['content'] ?? {};
-          value['content']['inspection_form_comments'] =
-              value['content']['inspection_form_comments'] ?? '';
-          value['evidences'] = value['evidences'] ?? _getImagesFromField(value);
-        });
-      });
-
-      // Campos de las subsecciones
-      _inspectionData['sections'].forEach((key, value) {
-        value['sub_sections'] = value['sub_sections'] ?? [];
-        value['sub_sections'].forEach((subSection) {
-          subSection['fields'].forEach((key, value) {
-            value['content'] = value['content'] ?? {};
-            value['content']['inspection_form_comments'] =
-                value['content']['inspection_form_comments'] ?? '';
-            value['evidences'] = value['evidences'] ?? _getImagesFromField(value);
-          });
-        });
-      });
     });
   }
 
