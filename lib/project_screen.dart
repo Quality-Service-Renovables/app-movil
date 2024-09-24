@@ -247,26 +247,3 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     );
   }
 }
-
-
-/**
- *
-    import 'dart:convert';
-    import 'dart:io';
-
-    // Suponiendo que evidence['inspection_evidence'] contiene la ruta del archivo
-    final file = File(evidence['inspection_evidence']);
-    final bytes = await file.readAsBytes();
-    final base64File = base64Encode(bytes);
-
-    data.add({
-    'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
-    'inspection_form_comments': value['content']['inspection_form_comments'],
-    'evidences': [
-    {
-    'evidence_uuid': evidence['evidence_uuid'],
-    'evidence_store': base64File,
-    }
-    ],
-    });
- */
