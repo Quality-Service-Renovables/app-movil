@@ -10,6 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'utils/constants.dart';
 import 'dart:convert';
+import 'package:path/path.dart' as path;
+import 'package:uuid/uuid.dart';
 
 class ProjectsScreen extends StatefulWidget {
   final List<dynamic> projects;
@@ -45,8 +47,193 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     });
   }
 
+  dynamic _prepareDataInspection(
+      dynamic inspectionData, String inspectionUuid) {
+    dynamic data = [];
+
+    inspectionData['sections'].forEach((key, value) {
+      value['fields'].forEach((key, value) {
+        if (value['content']['inspection_form_comments'].isNotEmpty) {
+          data.add({
+            'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
+            'inspection_form_comments': value['content']
+                ['inspection_form_comments'],
+          });
+        }
+      });
+
+      value['sub_sections'] = value['sub_sections'] ?? [];
+      value['sub_sections'].forEach((subSection) {
+        subSection['fields'].forEach((key, value) {
+          print('valor de subsection');
+          print(value);
+          if (value['content']['inspection_form_comments'].isNotEmpty) {
+            data.add({
+              'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
+              'inspection_form_comments': value['content']
+                  ['inspection_form_comments'],
+            });
+          }
+        });
+      });
+    });
+    return data;
+  }
+
+  int _getInspectionFormId(field, response) {
+    int inspectionFormId = 1;
+    response.forEach((value) {
+      if (value['field']['ct_inspection_form_uuid'] ==
+              field['ct_inspection_form_uuid'] &&
+          value['inspection_form_comments'] ==
+              field['content']['inspection_form_comments']) {
+        inspectionFormId = value['inspection_form_id'];
+        print("Se encontro el inspection_form_id: $inspectionFormId");
+      }
+    });
+    return inspectionFormId;
+  }
+
+  dynamic _prepareDataInspectionEvidences(
+      dynamic inspectionData, String inspectionUuid, response) {
+    print("Entro a _prepareDataInspectionEvidences");
+    dynamic data = [];
+
+    inspectionData['sections'].forEach((key, value) {
+      value['fields'].forEach((key, value) {
+        if (value['content']['inspection_form_comments'].isNotEmpty &&
+            value['evidences'].isNotEmpty) {
+          print("Entro al if: " + value['ct_inspection_form']);
+          int i = 1;
+          value['evidences'].forEach((evidence) {
+            print("evidence: $evidence");
+            data.add({
+              'evidence_store': evidence,
+              'inspection_uuid': inspectionUuid,
+              'position': "$i",
+              'inspection_form_id': value['content']['inspection_form_id'] ??
+                  _getInspectionFormId(value, response),
+            });
+            i++;
+          });
+        }
+      });
+
+      value['sub_sections'] = value['sub_sections'] ?? [];
+      value['sub_sections'].forEach((subSection) {
+        subSection['fields'].forEach((key, value) {
+          if (value['content']['inspection_form_comments'].isNotEmpty &&
+              value['evidences'].isNotEmpty) {
+            print("Entro al if 2: " + value['ct_inspection_form']);
+            int i = 1;
+            value['evidences'].forEach((evidence) {
+              print("evidence: $evidence");
+              data.add({
+                'evidence_store': evidence,
+                'inspection_uuid': inspectionUuid,
+                'position': "$i",
+                'inspection_form_id': value['content']['inspection_form_id'] ??
+                    _getInspectionFormId(value, response),
+              });
+              i++;
+            });
+          }
+        });
+      });
+    });
+    return data;
+  }
+
+  dynamic _updateInspectionFields(inspectionUuid, inspectionData) async {
+    dynamic data = _prepareDataInspection(inspectionData, inspectionUuid);
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final response = await http.post(
+      Uri.parse(
+          '${Constants.apiEndpoint}/api/inspection/forms/set-form-inspection'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'inspection_uuid': inspectionUuid,
+        'form': data, // Enviar `data` sin serializar a cadena
+      }),
+    );
+
+    final jsonResponse = json.decode(response.body);
+    return jsonResponse['data'];
+  }
+
+  Future<void> _updateInspectionFieldsEvidences(
+      inspectionUuid, inspectionData, response) async {
+    dynamic data = _prepareDataInspectionEvidences(
+        inspectionData, inspectionUuid, response);
+
+    // Generamos un UUID v4 para la sincronización
+    var uuid = Uuid();
+    String syncAppUuid = uuid.v4();
+
+    data.forEach((value) {
+      dynamic valueAux = {
+        'inspection_uuid': value['inspection_uuid'],
+        'position': value['position'],
+        'inspection_form_id': value['inspection_form_id'],
+        'from': 'app',
+        'sync_app_uuid': syncAppUuid,
+      };
+      sendJsonWithImage(valueAux, File(value['evidence_store']));
+    });
+  }
+
+  Future<void> sendJsonWithImage(
+      Map<String, dynamic> data, File imageFile) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    // Crea una solicitud multipart
+    var request = http.MultipartRequest(
+        'POST', Uri.parse("${Constants.apiEndpoint}/api/inspection/evidences"));
+
+    // Agrega el Bearer Token en los headers
+    request.headers['Authorization'] = 'Bearer $token';
+
+    // Adjunta los demás datos del JSON a la solicitud
+    data.forEach((key, value) {
+      request.fields[key] = value.toString();
+    });
+
+    // Adjunta la imagen como archivo
+    var stream = http.ByteStream(imageFile.openRead());
+    var length = await imageFile.length();
+
+    // Crea un archivo multipart
+    var multipartFile = http.MultipartFile(
+      'evidence_store', // Clave del archivo en el endpoint Laravel
+      stream,
+      length,
+      filename: path.basename(imageFile.path),
+    );
+
+    // Adjunta el archivo a la solicitud
+    request.files.add(multipartFile);
+
+    // Se envía la solicitud
+    var response = await request.send();
+
+    // Obtenemos la respuesta detallada
+    var responseData = await http.Response.fromStream(response);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      print('Success: ${responseData.body}');
+    } else {
+      print(
+          'Response body: ${responseData.body}, Error: ${response.statusCode}');
+    }
+  }
+
   Future<void> _syncWithProduction(String inspectionUuid) async {
-    // Muestra un mensaje de éxito.
+    // INICIO - Mostramos un mensaje de sincronización
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Sincronizando datos...'),
@@ -54,10 +241,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       ),
     );
 
-    var message = 'Sincronización fallida';
-    var color = Colors.red;
-
-    // Lógica para sincronizar los datos con la producción.
+    // PASO 1: Obtenemos la data de la inspección
     final db = await DatabaseHelper().database;
     final List<Map<String, dynamic>> inspectionForm = await db.query(
       'inspection_forms',
@@ -65,115 +249,45 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       where: 'inspection_uuid = ?',
       whereArgs: [inspectionUuid],
     );
-    //print('Inspection form:');
-    //printLargeString(inspectionForm.toString());
-    print('*******************************************************************EVIDENCES*******************************************************************');
+
+    // PASO 2: Si hay datos en la inspección
     if (inspectionForm.isNotEmpty) {
-      final _inspectionData = jsonDecode(inspectionForm.first['json_form']);
-      dynamic data = [];
-      dynamic evidences = [];
-
-      _inspectionData['sections'].forEach((key, value) {
-        value['fields'].forEach((key, value) {
-          if (value['content']['inspection_form_comments'].isNotEmpty) {
-            if (['evidences'] != null) {
-              value['evidences'].forEach((evidence) async {
-                if (evidence != null) {
-                  // Suponiendo que evidence['inspection_evidence'] contiene la ruta del archivo
-                  final file = File(evidence);
-
-                  if (await file.exists()) {
-                    final bytes = await file.readAsBytes();
-                    final base64File = base64Encode(bytes);
-
-                    print('evidence');
-                    print(evidence);
-
-                    evidences.add({
-                      'inspection_uuid': inspectionUuid,
-                      'evidence_store': base64File,
-                    });
-                  }
-                }
-              });
-            }
-            print('******************************************************************* END EVIDENCES*******************************************************************');
-            
-            data.add({
-              'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
-              'inspection_form_comments': value['content']
-              ['inspection_form_comments'],
-              'evidences': evidences
-              //[] // Aqui mandamos a llama la funcion que devuelve las evidencias, tendria que sacarlas del campo
-            });
-          }
-        });
-
-        value['sub_sections'] = value['sub_sections'] ?? [];
-        value['sub_sections'].forEach((subSection) {
-          subSection['fields'].forEach((key, value) {
-            print('valor de subsection');
-            print(value);
-            if (value['content']['inspection_form_comments'].isNotEmpty) {
-              data.add({
-                'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
-                'inspection_form_comments': value['content']
-                ['inspection_form_comments'],
-                'evidences':
-                [] // Aqui mandamos a llama la funcion que devuelve las evidencias, tendria que sacarlas del campo
-              });
-            }
-          });
-        });
-      });
-
-      print("Data: ");
-      print(data);
+      Map<String, dynamic> inspectionData =
+          jsonDecode(inspectionForm.first['json_form']);
 
       try {
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('token');
-        final response = await http.post(
-          Uri.parse(
-              '${Constants.apiEndpoint}/api/inspection/forms/set-form-inspection'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-          body: jsonEncode({
-            'inspection_uuid': inspectionUuid,
-            'form': data, // Enviar `data` sin serializar a cadena
-          }),
+        // PASO 3: Actualizamos los campos de la inspección
+        dynamic response =
+            await _updateInspectionFields(inspectionUuid, inspectionData);
+
+        // PASO 4: Actualizamos las evidencias de cada campo de la inspección
+        await _updateInspectionFieldsEvidences(
+            inspectionUuid, inspectionData, response);
+
+        // FIN - Muestra un mensaje de éxito.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sincronización exitosa'),
+            backgroundColor: Colors.green, // Color verde
+          ),
         );
-
-        final jsonResponse = json.decode(response.body);
-        print('Response: $jsonResponse');
-
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          message = 'Sincronización exitosa';
-          color = Colors.green;
-        }
       } catch (e) {
-        message = 'Error durante la sincronización: $e';
-        color = Colors.red;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error durante la sincronización: $e'),
+            backgroundColor: Colors.red, // Color verde
+          ),
+        );
+        print('Error durante la sincronización: $e');
       }
-
     }
-
-
-    // Muestra un mensaje de éxito.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: color, // Color verde
-      ),
-    );
   }
 
   void printLargeString(String str) {
     const int chunkSize = 800; // Tamaño del fragmento
     for (int i = 0; i < str.length; i += chunkSize) {
-      print(str.substring(i, i + chunkSize > str.length ? str.length : i + chunkSize));
+      print(str.substring(
+          i, i + chunkSize > str.length ? str.length : i + chunkSize));
     }
   }
 
