@@ -10,6 +10,8 @@ import 'helpers.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'utils/constants.dart';
+import 'package:path/path.dart' as path; // Para obtener el nombre del archivo
+import 'package:path_provider/path_provider.dart';
 
 class InspectionFormScreen extends StatefulWidget {
   final String ctInspectionUuid;
@@ -76,9 +78,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final response = await http.get(
-      Uri.parse('${Constants.apiEndpoint}/api/inspection/forms/get-form-inspection/' +
-          widget.inspectionUuid +
-          '?in_process=true'),
+      Uri.parse(
+          '${Constants.apiEndpoint}/api/inspection/forms/get-form-inspection/' +
+              widget.inspectionUuid +
+              '?in_process=true'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -93,27 +96,32 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       final now = DateTime.now().toIso8601String();
 
       // Campos de las secciones
-      data['sections'].forEach((key, value) {
-        value['fields'].forEach((key, value) {
-          value['content'] = value['content'] ?? {};
-          value['content']['inspection_form_comments'] =
-              value['content']['inspection_form_comments'] ?? '';
-          value['evidences'] = value['evidences'] ?? _getImagesFromField(value);
-        });
-      });
+      for (var section in data['sections'].values) {
+        for (var field in section['fields'].values) {
+          field['content'] = field['content'] ?? {};
+          field['content']['inspection_form_comments'] =
+              field['content']['inspection_form_comments'] ?? '';
+
+          // Esperamos la función async para obtener las imágenes y asignarlas a 'evidences'
+          field['evidences'] = await _getImagesFromField(field);
+        }
+      }
 
       // Campos de las subsecciones
-      data['sections'].forEach((key, value) {
-        value['sub_sections'] = value['sub_sections'] ?? [];
-        value['sub_sections'].forEach((subSection) {
-          subSection['fields'].forEach((key, value) {
-            value['content'] = value['content'] ?? {};
-            value['content']['inspection_form_comments'] =
-                value['content']['inspection_form_comments'] ?? '';
-            value['evidences'] = value['evidences'] ?? _getImagesFromField(value);
-          });
-        });
-      });
+      for (var section in data['sections'].values) {
+        section['sub_sections'] = section['sub_sections'] ?? [];
+
+        for (var subSection in section['sub_sections']) {
+          for (var field in subSection['fields'].values) {
+            field['content'] = field['content'] ?? {};
+            field['content']['inspection_form_comments'] =
+                field['content']['inspection_form_comments'] ?? '';
+
+            // Aquí esperamos la función async para obtener las imágenes y asignarlas a 'evidences'
+            field['evidences'] = await _getImagesFromField(field);
+          }
+        }
+      }
 
       print("----data to save----");
       printPrettyJson(data);
@@ -291,11 +299,33 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   // Método para obtener las imágenes de un campo que ya tiene imágenes de la base de datos
-  List<dynamic> _getImagesFromField(field) {
+  Future<List<dynamic>> _getImagesFromField(field) async {
     final images = [];
     if (field['content'] != null && field['content']['evidences'] != null) {
       for (var image in field['content']['evidences']) {
-        images.add("${Constants.apiEndpoint}/" + image['inspection_evidence']);
+        String imageUrl =
+            "${Constants.apiEndpoint}/" + image['inspection_evidence'];
+
+        // Descargar la imagen
+        var response = await http.get(Uri.parse(imageUrl));
+
+        if (response.statusCode == 200) {
+          // Obtener la ruta local del directorio
+          Directory directory = await getApplicationDocumentsDirectory();
+
+          // Nombre del archivo basado en la URL
+          String fileName = path.basename(imageUrl);
+
+          // Crear la ruta completa
+          String localPath = path.join(directory.path, fileName);
+
+          // Guardar la imagen localmente
+          File localFile = File(localPath);
+          await localFile.writeAsBytes(response.bodyBytes);
+
+          // Agregar la ruta local al array de imágenes
+          images.add(localPath);
+        }
       }
     }
     return images;
@@ -303,34 +333,18 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
 
   // Metodo para mostrar la imagen en un widget
   Widget _image(imagePath, {String from = 'cover'}) {
-    // Si la imagen es de internet
-    if (imagePath.startsWith('http') || imagePath.startsWith('www')) {
-      if (from == 'cover') {
-        return Image.network(
-          imagePath,
-          width: 100,
-          height: 100,
-        );
-      } else {
-        return Image.network(
-          imagePath,
-          fit: BoxFit.cover,
-        );
-      }
+    // Si la imagen es local (file path)
+    if (from == 'cover') {
+      return Image.file(
+        File(imagePath),
+        width: 100,
+        height: 100,
+      );
     } else {
-      // Si la imagen es local (file path)
-      if (from == 'cover') {
-        return Image.file(
-          File(imagePath),
-          width: 100,
-          height: 100,
-        );
-      } else {
-        return Image.file(
-          File(imagePath),
-          fit: BoxFit.cover,
-        );
-      }
+      return Image.file(
+        File(imagePath),
+        fit: BoxFit.cover,
+      );
     }
   }
 
@@ -527,8 +541,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                 top: 0,
                                                 left: 0,
                                                 child: GestureDetector(
-                                                  onTap: () => _viewImage(field
-                                                      .value['evidences'][index]),
+                                                  onTap: () => _viewImage(
+                                                      field.value['evidences']
+                                                          [index]),
                                                   child: Container(
                                                     decoration: BoxDecoration(
                                                       color: Colors.blue,
@@ -686,7 +701,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                   spacing: 10,
                                                   runSpacing: 10,
                                                   children: List.generate(
-                                                      fieldSub.value['evidences']
+                                                      fieldSub
+                                                          .value['evidences']
                                                           .length, (index) {
                                                     return Stack(
                                                       children: [
@@ -696,8 +712,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                               BorderRadius.circular(
                                                                   8.0), // Ajusta el radio del borde
                                                           child: _image(fieldSub
-                                                                  .value[
-                                                              'evidences'][index]),
+                                                                      .value[
+                                                                  'evidences']
+                                                              [index]),
                                                         ),
                                                         // Botón de eliminación en forma de "X"
                                                         Positioned(

@@ -76,8 +76,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       _inspectionData['sections'].forEach((key, value) {
         value['fields'].forEach((key, value) {
           if (value['content']['inspection_form_comments'].isNotEmpty) {
-            evidences = [];
-
             if (['evidences'] != null) {
               value['evidences'].forEach((evidence) async {
                 if (evidence != null) {
