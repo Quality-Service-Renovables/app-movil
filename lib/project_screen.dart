@@ -51,12 +51,18 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     dynamic data = [];
 
     inspectionData['sections'].forEach((key, value) {
+
       value['fields'].forEach((key, value) {
         if (value['content']['inspection_form_comments'].isNotEmpty) {
           data.add({
             'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
             'inspection_form_comments': value['content']
                 ['inspection_form_comments'],
+          });
+        } else if (value['content']['inspection_form_comments'].isNotEmpty && value['evidences'].isNotEmpty) {
+          data.add({
+            'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
+            'inspection_form_comments': ' ',
           });
         }
       });
@@ -259,6 +265,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         await _updateInspectionFieldsEvidences(
             inspectionUuid, inspectionData, response);
 
+        // PASO 5: Actualizamos el estado de sincronización
+        await _setSyncState(inspectionUuid);
         // FIN - Muestra un mensaje de éxito.
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -276,6 +284,18 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         print('Error durante la sincronización: $e');
       }
     }
+  }
+
+
+  Future<void> _setSyncState(inspectionUuid) async {
+    final db = await DatabaseHelper().database;
+
+    await db.update(
+      'inspection_forms',
+      {'is_sync': 1},
+      where: 'inspection_uuid = ?',
+      whereArgs: [inspectionUuid],
+    );
   }
 
   @override
@@ -303,7 +323,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 _projects[index]['ct_inspection_uuid']; // Recupera el UUID
             final inspectionUuid =
                 _projects[index]['inspection_uuid']; // Recupera el UUID
-
             return Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
@@ -314,21 +333,22 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 subtitle: Html(
                   data: projectDescription,
                 ),
-                trailing: Container(
-                  decoration: BoxDecoration(
+                trailing: _projects[index]['status_id'] != 6 || (_projects[index]['is_sync'] == null || _projects[index]['is_sync'] == 0)
+                    ? Container(
+                  decoration: const BoxDecoration(
                     color: Colors.blue, // Color de fondo azul
                     shape: BoxShape.circle, // Forma redondeada
                   ),
                   child: IconButton(
-                    icon: Icon(Icons.cloud_sync,
+                    icon: const Icon(Icons.cloud_sync,
                         color: Colors.white), // Ícono con color blanco
                     onPressed: () {
                       // Acción al presionar el botón
-                      _syncWithProduction(
-                          inspectionUuid); // Llama a la función _sync
+                      _syncWithProduction(inspectionUuid); // Llama a la función _sync
                     },
                   ),
-                ),
+                )
+                    : null,
                 onTap: () {
                   // Navega a la pantalla de inspección al hacer tap
                   Navigator.push(
