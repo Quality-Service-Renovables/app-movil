@@ -45,15 +45,17 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     final db = await DatabaseHelper().database;
     final List<Map<String, dynamic>> inspectionForm = await db.query(
       'inspection_forms',
-      columns: ['json_form'],
+      columns: ['json_form', 'is_sync'],
       where: 'inspection_uuid = ?',
       whereArgs: [widget.inspectionUuid],
     );
+    /*int is_sync = inspectionForm.first['is_sync'];
+    print("is_sync: " + is_sync.toString());*/
 
-    if (inspectionForm.isNotEmpty) {
+    if (inspectionForm.isNotEmpty /*&& is_sync == 0*/) {
       print("Entro a 1- _getFormFromDatabase");
       await _getFormFromDatabase(db);
-    } else if (inspectionForm.isEmpty && hasConnection) {
+    } else if ((inspectionForm.isEmpty && hasConnection) /*|| is_sync == 1*/) {
       print("2 - Entro a _updateFormInspection");
       await _updateFormInspection(db);
       await _getFormFromDatabase(db);
@@ -133,6 +135,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           'json_form': jsonEncode(data),
           'created_at': now,
           'updated_at': now,
+          'is_sync': 0,
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
@@ -257,15 +260,19 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
 
   // Método para tomar una foto con la cámara
   Future<void> _takePhoto(field) async {
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.camera);
+    try {
+      final XFile? pickedFile =
+          await _picker.pickImage(source: ImageSource.camera);
 
-    if (pickedFile != null) {
-      setState(() {
-        field.value['evidences'] ??= [];
-        field.value['evidences'].add(pickedFile.path);
-        _uploadIcon = Icons.save;
-      });
+      if (pickedFile != null) {
+        setState(() {
+          field.value['evidences'] ??= [];
+          field.value['evidences'].add(pickedFile.path);
+          _uploadIcon = Icons.save;
+        });
+      }
+    } catch (e) {
+      print('Error al seleccionar imágenes: $e');
     }
   }
 
@@ -279,23 +286,27 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
 
   // Método para mostrar la imagen en un modal
   void _viewImage(image) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _image(image, from: 'full'),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('Cerrar'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+    try {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Dialog(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _image(image, from: 'full'),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('Cerrar'),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      print('Error al visualizar la imagen: $e');
+    }
   }
 
   // Método para obtener las imágenes de un campo que ya tiene imágenes de la base de datos

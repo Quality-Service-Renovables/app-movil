@@ -51,7 +51,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     dynamic data = [];
 
     inspectionData['sections'].forEach((key, value) {
-
       value['fields'].forEach((key, value) {
         if (value['content']['inspection_form_comments'].isNotEmpty) {
           data.add({
@@ -59,10 +58,13 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             'inspection_form_comments': value['content']
                 ['inspection_form_comments'],
           });
-        } else if (value['content']['inspection_form_comments'].isNotEmpty && value['evidences'].isNotEmpty) {
+        } else if ((value['content']['inspection_form_comments'] == "" ||
+                value['content']['inspection_form_comments'] == null) &&
+            value['evidences'].isNotEmpty) {
+          value['content']['inspection_form_comments'] = 'Por definir';
           data.add({
             'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
-            'inspection_form_comments': ' ',
+            'inspection_form_comments': 'Por definir',
           });
         }
       });
@@ -77,6 +79,14 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
               'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
               'inspection_form_comments': value['content']
                   ['inspection_form_comments'],
+            });
+          } else if ((value['content']['inspection_form_comments'] == "" ||
+                  value['content']['inspection_form_comments'] == null) &&
+              value['evidences'].isNotEmpty) {
+            value['content']['inspection_form_comments'] = 'Por definir';
+            data.add({
+              'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
+              'inspection_form_comments': 'Por definir',
             });
           }
         });
@@ -187,8 +197,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     });
   }
 
-  Future<void> sendEvidences(
-      Map<String, dynamic> data, File imageFile) async {
+  Future<void> sendEvidences(Map<String, dynamic> data, File imageFile) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
@@ -286,7 +295,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     }
   }
 
-
   Future<void> _setSyncState(inspectionUuid) async {
     final db = await DatabaseHelper().database;
 
@@ -333,21 +341,24 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 subtitle: Html(
                   data: projectDescription,
                 ),
-                trailing: _projects[index]['status_id'] != 6 || (_projects[index]['is_sync'] == null || _projects[index]['is_sync'] == 0)
+                trailing: _projects[index]['status_id'] != 6 ||
+                        (_projects[index]['is_sync'] == null ||
+                            _projects[index]['is_sync'] == 0)
                     ? Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.blue, // Color de fondo azul
-                    shape: BoxShape.circle, // Forma redondeada
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.cloud_sync,
-                        color: Colors.white), // Ícono con color blanco
-                    onPressed: () {
-                      // Acción al presionar el botón
-                      _syncWithProduction(inspectionUuid); // Llama a la función _sync
-                    },
-                  ),
-                )
+                        decoration: const BoxDecoration(
+                          color: Colors.blue, // Color de fondo azul
+                          shape: BoxShape.circle, // Forma redondeada
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.cloud_sync,
+                              color: Colors.white), // Ícono con color blanco
+                          onPressed: () {
+                            // Acción al presionar el botón
+                            _syncWithProduction(
+                                inspectionUuid); // Llama a la función _sync
+                          },
+                        ),
+                      )
                     : null,
                 onTap: () {
                   // Navega a la pantalla de inspección al hacer tap
