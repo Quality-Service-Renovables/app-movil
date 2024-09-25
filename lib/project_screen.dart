@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'helpers.dart';
 import 'logout_service.dart'; // Importa el servicio de logout
 import 'package:flutter_html/flutter_html.dart';
 import 'inspection_form_screen.dart';
@@ -80,7 +79,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     return data;
   }
 
-  int _getInspectionFormId(field, response) {
+  // Función para obtener el ID del campo del formulario de inspección
+  int _getInspectionFormIdFromResponse(field, response) {
     int inspectionFormId = 1;
     response.forEach((value) {
       if (value['field']['ct_inspection_form_uuid'] ==
@@ -88,7 +88,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           value['inspection_form_comments'] ==
               field['content']['inspection_form_comments']) {
         inspectionFormId = value['inspection_form_id'];
-        print("Se encontro el inspection_form_id: $inspectionFormId");
       }
     });
     return inspectionFormId;
@@ -96,23 +95,20 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
 
   dynamic _prepareDataInspectionEvidences(
       dynamic inspectionData, String inspectionUuid, response) {
-    print("Entro a _prepareDataInspectionEvidences");
     dynamic data = [];
 
     inspectionData['sections'].forEach((key, value) {
       value['fields'].forEach((key, value) {
         if (value['content']['inspection_form_comments'].isNotEmpty &&
             value['evidences'].isNotEmpty) {
-          print("Entro al if: " + value['ct_inspection_form']);
           int i = 1;
           value['evidences'].forEach((evidence) {
-            print("evidence: $evidence");
             data.add({
               'evidence_store': evidence,
               'inspection_uuid': inspectionUuid,
               'position': "$i",
               'inspection_form_id': value['content']['inspection_form_id'] ??
-                  _getInspectionFormId(value, response),
+                  _getInspectionFormIdFromResponse(value, response),
             });
             i++;
           });
@@ -124,16 +120,14 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         subSection['fields'].forEach((key, value) {
           if (value['content']['inspection_form_comments'].isNotEmpty &&
               value['evidences'].isNotEmpty) {
-            print("Entro al if 2: " + value['ct_inspection_form']);
             int i = 1;
             value['evidences'].forEach((evidence) {
-              print("evidence: $evidence");
               data.add({
                 'evidence_store': evidence,
                 'inspection_uuid': inspectionUuid,
                 'position': "$i",
                 'inspection_form_id': value['content']['inspection_form_id'] ??
-                    _getInspectionFormId(value, response),
+                    _getInspectionFormIdFromResponse(value, response),
               });
               i++;
             });
@@ -174,6 +168,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     var uuid = Uuid();
     String syncAppUuid = uuid.v4();
 
+    // Iteramos las evidencias para enviarlas una por una
     data.forEach((value) {
       dynamic valueAux = {
         'inspection_uuid': value['inspection_uuid'],
@@ -182,11 +177,11 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         'from': 'app',
         'sync_app_uuid': syncAppUuid,
       };
-      sendJsonWithImage(valueAux, File(value['evidence_store']));
+      sendEvidences(valueAux, File(value['evidence_store']));
     });
   }
 
-  Future<void> sendJsonWithImage(
+  Future<void> sendEvidences(
       Map<String, dynamic> data, File imageFile) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -280,14 +275,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         );
         print('Error durante la sincronización: $e');
       }
-    }
-  }
-
-  void printLargeString(String str) {
-    const int chunkSize = 800; // Tamaño del fragmento
-    for (int i = 0; i < str.length; i += chunkSize) {
-      print(str.substring(
-          i, i + chunkSize > str.length ? str.length : i + chunkSize));
     }
   }
 
