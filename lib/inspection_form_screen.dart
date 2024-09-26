@@ -42,7 +42,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   Future<void> _getFormInspection() async {
-    print("inspection_uuid" + widget.inspectionUuid);
+    print("inspection_uuid: " + widget.inspectionUuid);
     final hasConnection = await checkInternetConnection();
     final db = await DatabaseHelper().database;
     final List<Map<String, dynamic>> inspectionForm = await db.query(
