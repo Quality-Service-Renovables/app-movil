@@ -52,20 +52,19 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       whereArgs: [widget.inspectionUuid],
     );
 
-    is_sync = inspectionForm.first['is_sync'] == 1 ? true : false;
+    
 
-    if (inspectionForm.isNotEmpty /*&& is_sync == 0*/) {
+    if (inspectionForm.isNotEmpty) {
+      is_sync = inspectionForm.first['is_sync'] == 1 ? true : false;
       print("Entro a 1- _getFormFromDatabase");
       await _getFormFromDatabase(db);
-    } else if ((inspectionForm.isEmpty && hasConnection) /*|| is_sync == 1*/) {
+    } else if ((inspectionForm.isEmpty && hasConnection)) {
       print("2 - Entro a _updateFormInspection");
       await _updateFormInspection(db);
       await _getFormFromDatabase(db);
       print("3 - Entro a _getFormFromDatabase");
     } else if (inspectionForm.isEmpty && !hasConnection) {
       print("4 - Entro a _showErrorDialog");
-      print(inspectionForm.isEmpty);
-      print(hasConnection);
       showErrorDialog(
         context,
         'QSR Checklist',
