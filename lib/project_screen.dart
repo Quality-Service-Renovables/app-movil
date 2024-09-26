@@ -25,12 +25,14 @@ class ProjectsScreen extends StatefulWidget {
 
 class _ProjectsScreenState extends State<ProjectsScreen> {
   late List<dynamic> _projects;
+  bool isSync = false;
 
   @override
   void initState() {
     super.initState();
     _projects = widget.projects;
     print('Projects: $_projects');
+    _initializeSyncStates();
   }
 
   Future<void> _refreshProjects() async {
@@ -304,6 +306,41 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       where: 'inspection_uuid = ?',
       whereArgs: [inspectionUuid],
     );
+
+    setState(() {
+      isSync = true;
+    });
+  }
+
+  Future<void> _initializeSyncStates() async {
+    for (var project in _projects) {
+      final inspectionUuid = project['inspection_uuid'];
+      await _getSyncState(inspectionUuid);
+    }
+  }
+
+  Future<void> _getSyncState(String inspectionUuid) async {
+    final db = await DatabaseHelper().database;
+
+    final List<Map<String, dynamic>> inspectionForm = await db.query(
+      'inspection_forms',
+      columns: ['is_sync'],
+      where: 'inspection_uuid = ? AND is_sync = 1',
+      whereArgs: [inspectionUuid],
+    );
+
+    print('Inspection form sync status');
+    print(inspectionForm);
+    print(inspectionForm.isNotEmpty);
+    print(inspectionUuid);
+    print('Inspection form sync status - end');
+
+    setState(() {
+      isSync = inspectionForm.isNotEmpty;
+    });
+    print('*************************** isSync status ***************************');
+    print(isSync);
+    print('*************************** isSync status ***************************');
   }
 
   @override
@@ -325,12 +362,13 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           padding: const EdgeInsets.all(10),
           itemCount: _projects.length,
           itemBuilder: (context, index) {
+            print('project..................................................');
+            print(_projects[index]);
             final projectName = _projects[index]['project_name'];
             final projectDescription = _projects[index]['description'];
-            final ctInspectionUuid =
-                _projects[index]['ct_inspection_uuid']; // Recupera el UUID
-            final inspectionUuid =
-                _projects[index]['inspection_uuid']; // Recupera el UUID
+            final ctInspectionUuid = _projects[index]['ct_inspection_uuid']; // Recupera el UUID
+            final inspectionUuid = _projects[index]['inspection_uuid']; // Recupera el UUID
+            //
             return Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
@@ -341,9 +379,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 subtitle: Html(
                   data: projectDescription,
                 ),
-                trailing: _projects[index]['status_id'] != 6 ||
-                        (_projects[index]['is_sync'] == null ||
-                            _projects[index]['is_sync'] == 0)
+                trailing: _projects[index]['status_id'] == 6 && isSync == false
                     ? Container(
                         decoration: const BoxDecoration(
                           color: Colors.blue, // Color de fondo azul
