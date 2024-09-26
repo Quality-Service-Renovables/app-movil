@@ -54,15 +54,11 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
 
     if (inspectionForm.isNotEmpty) {
       is_sync = inspectionForm.first['is_sync'] == 1 ? true : false;
-      print("Entro a 1- _getFormFromDatabase");
       await _getFormFromDatabase(db);
     } else if ((inspectionForm.isEmpty && hasConnection)) {
-      print("2 - Entro a _updateFormInspection");
       await _updateFormInspection(db);
       await _getFormFromDatabase(db);
-      print("3 - Entro a _getFormFromDatabase");
     } else if (inspectionForm.isEmpty && !hasConnection) {
-      print("4 - Entro a _showErrorDialog");
       showErrorDialog(
         context,
         'QSR Checklist',
@@ -122,8 +118,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         }
       }
 
-      print("----data to save----");
-      printPrettyJson(data);
+      //print("----data to save----");
+      //printPrettyJson(data);
 
       await db.insert(
         'inspection_forms',
