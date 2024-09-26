@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:quality_service/database_helper.dart';
 import 'package:quality_service/project_screen.dart';
+
 import 'login_screen.dart';
 import 'welcome_screen.dart';
 
@@ -18,8 +18,8 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => LoginScreen(),
-        '/welcome': (context) => WelcomeScreen(),
+        '/': (context) => const LoginScreen(),
+        '/welcome': (context) => const WelcomeScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/projects') {

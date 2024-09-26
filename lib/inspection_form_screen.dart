@@ -1,17 +1,18 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:sqflite/sqflite.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'database_helper.dart';
-import 'logout_service.dart'; // Importa el servicio de logout
-import 'helpers.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'utils/constants.dart';
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path; // Para obtener el nombre del archivo
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
+
+import 'database_helper.dart';
+import 'helpers.dart';
+import 'logout_service.dart'; // Importa el servicio de logout
+import 'utils/constants.dart';
 
 class InspectionFormScreen extends StatefulWidget {
   final String ctInspectionUuid;
@@ -222,21 +223,21 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Confirmar cambios'),
-          content: Text('¿Estás seguro de que deseas confirmar los cambios?'),
+          title: const Text('Confirmar cambios'),
+          content: const Text('¿Estás seguro de que deseas confirmar los cambios?'),
           actions: <Widget>[
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Cierra el diálogo
               },
-              child: Text('Cancelar'),
+              child: const Text('Cancelar'),
             ),
             TextButton(
               onPressed: () {
                 _confirmChanges(); // Llama a la función para confirmar cambios
                 Navigator.of(context).pop(); // Cierra el diálogo
               },
-              child: Text('Confirmar'),
+              child: const Text('Confirmar'),
             ),
           ],
         );
@@ -297,7 +298,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                 _image(image, from: 'full'),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Cerrar'),
+                  child: const Text('Cerrar'),
                 ),
               ],
             ),
@@ -373,12 +374,12 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           Container(
             margin: const EdgeInsets.only(
                 left: 16.0, right: 10.0), // Margen a la izquierda
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.blue, // Color de fondo
               shape: BoxShape.circle, // Forma redondeada
             ),
             child: _isUploading
-                ? CircularProgressIndicator()
+                ? const CircularProgressIndicator()
                 : IconButton(
                     icon: Icon(_uploadIcon,
                         color: Colors.white), // Icono centrado y color blanco
@@ -470,7 +471,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                         borderRadius: BorderRadius.circular(
                                             8.0), // Borde redondeado opcional
                                       ),
-                                      margin: EdgeInsets.all(
+                                      margin: const EdgeInsets.all(
                                           16.0), // Espaciado opcional alrededor del botón
                                       child: IconButton(
                                         icon: const Icon(Icons.photo_library),
@@ -490,7 +491,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                         borderRadius: BorderRadius.circular(
                                             8.0), // Borde redondeado opcional
                                       ),
-                                      margin: EdgeInsets.all(
+                                      margin: const EdgeInsets.all(
                                           16.0), // Espaciado opcional alrededor del botón
                                       child: IconButton(
                                         icon: const Icon(Icons.photo_camera),
@@ -505,7 +506,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                 ],
                               ),
                               field.value['evidences'] == null
-                                  ? Text(
+                                  ? const Text(
                                       'No se han selecionado imagenes.',
                                       textAlign: TextAlign.left,
                                     )
@@ -534,12 +535,12 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                   onTap: () => _removeImage(
                                                       index, field),
                                                   child: Container(
-                                                    decoration: BoxDecoration(
+                                                    decoration: const BoxDecoration(
                                                       color: Colors.red,
                                                       shape: BoxShape.circle,
                                                     ),
-                                                    padding: EdgeInsets.all(4),
-                                                    child: Icon(
+                                                    padding: const EdgeInsets.all(4),
+                                                    child: const Icon(
                                                       Icons.close,
                                                       color: Colors.white,
                                                       size: 16,
@@ -556,12 +557,12 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                       field.value['evidences']
                                                           [index]),
                                                   child: Container(
-                                                    decoration: BoxDecoration(
+                                                    decoration: const BoxDecoration(
                                                       color: Colors.blue,
                                                       shape: BoxShape.circle,
                                                     ),
-                                                    padding: EdgeInsets.all(4),
-                                                    child: Icon(
+                                                    padding: const EdgeInsets.all(4),
+                                                    child: const Icon(
                                                       Icons.zoom_in,
                                                       color: Colors.white,
                                                       size: 16,
@@ -658,7 +659,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                       BorderRadius.circular(
                                                           8.0), // Borde redondeado opcional
                                                 ),
-                                                margin: EdgeInsets.all(
+                                                margin: const EdgeInsets.all(
                                                     16.0), // Espaciado opcional alrededor del botón
                                                 child: IconButton(
                                                   icon: const Icon(
@@ -683,7 +684,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                       BorderRadius.circular(
                                                           8.0), // Borde redondeado opcional
                                                 ),
-                                                margin: EdgeInsets.all(
+                                                margin: const EdgeInsets.all(
                                                     16.0), // Espaciado opcional alrededor del botón
                                                 child: IconButton(
                                                   icon: const Icon(
@@ -701,7 +702,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                           ],
                                         ),
                                         fieldSub.value['evidences'] == null
-                                            ? Text(
+                                            ? const Text(
                                                 'No images selected.',
                                                 textAlign: TextAlign.left,
                                               )
@@ -739,16 +740,16 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                                     fieldSub),
                                                             child: Container(
                                                               decoration:
-                                                                  BoxDecoration(
+                                                                  const BoxDecoration(
                                                                 color:
                                                                     Colors.red,
                                                                 shape: BoxShape
                                                                     .circle,
                                                               ),
                                                               padding:
-                                                                  EdgeInsets
+                                                                  const EdgeInsets
                                                                       .all(4),
-                                                              child: Icon(
+                                                              child: const Icon(
                                                                 Icons.close,
                                                                 color: Colors
                                                                     .white,
@@ -769,16 +770,16 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                                     [index]),
                                                             child: Container(
                                                               decoration:
-                                                                  BoxDecoration(
+                                                                  const BoxDecoration(
                                                                 color:
                                                                     Colors.blue,
                                                                 shape: BoxShape
                                                                     .circle,
                                                               ),
                                                               padding:
-                                                                  EdgeInsets
+                                                                  const EdgeInsets
                                                                       .all(4),
-                                                              child: Icon(
+                                                              child: const Icon(
                                                                 Icons.zoom_in,
                                                                 color: Colors
                                                                     .white,

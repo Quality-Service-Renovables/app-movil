@@ -181,7 +181,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         inspectionData, inspectionUuid, response);
 
     // Generamos un UUID v4 para la sincronización
-    var uuid = Uuid();
+    var uuid = const Uuid();
     String syncAppUuid = uuid.v4();
 
     // Iteramos las evidencias para enviarlas una por una
@@ -278,7 +278,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         await _setSyncState(inspectionUuid);
         // FIN - Muestra un mensaje de éxito.
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Sincronización exitosa'),
             backgroundColor: Colors.green, // Color verde
           ),

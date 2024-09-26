@@ -38,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // Si hay un token válido, redirigir a la pantalla de bienvenida
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => WelcomeScreen()),
+        MaterialPageRoute(builder: (context) => const WelcomeScreen()),
       );
     }
   }
@@ -83,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // Redirigir a la pantalla de bienvenida
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => WelcomeScreen()),
+        MaterialPageRoute(builder: (context) => const WelcomeScreen()),
       );
     } else {
       showDialog(
