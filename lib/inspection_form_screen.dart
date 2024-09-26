@@ -33,6 +33,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
   IconData _uploadIcon = Icons.save_as;
+  bool is_sync = false;
 
   @override
   void initState() {
@@ -50,8 +51,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       where: 'inspection_uuid = ?',
       whereArgs: [widget.inspectionUuid],
     );
-    /*int is_sync = inspectionForm.first['is_sync'];
-    print("is_sync: " + is_sync.toString());*/
+
+    is_sync = inspectionForm.first['is_sync'] == 1 ? true : false;
 
     if (inspectionForm.isNotEmpty /*&& is_sync == 0*/) {
       print("Entro a 1- _getFormFromDatabase");
@@ -136,7 +137,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           'json_form': jsonEncode(data),
           'created_at': now,
           'updated_at': now,
-          'is_sync': 0,
+          //'is_sync': 0,
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
@@ -175,39 +176,39 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     });
     //print("JSON FORM:");
     //debugPrint(jsonEncode(_inspectionData), wrapWidth: 1024);
-    final hasConnection = await checkInternetConnection();
+    //final hasConnection = await checkInternetConnection();
 
-    if (hasConnection) {
-      final db = await DatabaseHelper().database;
-      final now = DateTime.now().toIso8601String();
-      final jsonData = jsonEncode(_inspectionData);
+    //if (hasConnection) {
+    final db = await DatabaseHelper().database;
+    final now = DateTime.now().toIso8601String();
+    final jsonData = jsonEncode(_inspectionData);
 
-      await db.insert(
-        'inspection_forms',
-        {
-          'inspection_uuid': widget.inspectionUuid,
-          'json_form': jsonData,
-          'created_at': now,
-          'updated_at': now,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+    await db.insert(
+      'inspection_forms',
+      {
+        'inspection_uuid': widget.inspectionUuid,
+        'json_form': jsonData,
+        'created_at': now,
+        'updated_at': now,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
 
-      // Consulta el registro guardado para depuración
-      final List<Map<String, dynamic>> result = await db.query(
-        'inspection_forms',
-        where: 'inspection_uuid = ?',
-        whereArgs: [widget.inspectionUuid],
-      );
-      // Cambia el ícono a cloud_done
-      setState(() {
-        _uploadIcon = Icons.save;
-        _isUploading = false;
-      });
-      //print('Registro guardado: $result');
-      print("Registro guardado: ");
-      debugPrint(jsonData, wrapWidth: 1024);
-    } else {
+    // Consulta el registro guardado para depuración
+    final List<Map<String, dynamic>> result = await db.query(
+      'inspection_forms',
+      where: 'inspection_uuid = ?',
+      whereArgs: [widget.inspectionUuid],
+    );
+    // Cambia el ícono a cloud_done
+    setState(() {
+      _uploadIcon = Icons.save;
+      _isUploading = false;
+    });
+    //print('Registro guardado: $result');
+    print("Registro guardado: ");
+    debugPrint(jsonData, wrapWidth: 1024);
+    /*} else {
       showErrorDialog(
         context,
         'QSR Checklist',
@@ -215,7 +216,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           'Se requiere conexión a internet para sincronización de cambios.',
         ],
       );
-    }
+    }*/
   }
 
   void _showConfirmationDialog(BuildContext context) {
@@ -224,7 +225,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Confirmar cambios'),
-          content: const Text('¿Estás seguro de que deseas confirmar los cambios?'),
+          content:
+              const Text('¿Estás seguro de que deseas confirmar los cambios?'),
           actions: <Widget>[
             TextButton(
               onPressed: () {
@@ -372,19 +374,21 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                 LogoutService.logout(context), // Utiliza el servicio de logout
           ),
           Container(
-            margin: const EdgeInsets.only(
-                left: 16.0, right: 10.0), // Margen a la izquierda
-            decoration: const BoxDecoration(
-              color: Colors.blue, // Color de fondo
-              shape: BoxShape.circle, // Forma redondeada
+            margin: const EdgeInsets.only(left: 16.0, right: 10.0),
+            decoration: BoxDecoration(
+              color: is_sync
+                  ? Colors.grey
+                  : Colors.blue, // Cambia color según estado
+              shape: BoxShape.circle,
             ),
             child: _isUploading
                 ? const CircularProgressIndicator()
                 : IconButton(
-                    icon: Icon(_uploadIcon,
-                        color: Colors.white), // Icono centrado y color blanco
-                    onPressed: () => _showConfirmationDialog(
-                        context), // Utiliza el servicio de logout
+                    icon:
+                        Icon(_uploadIcon, color: Colors.white), // Icono blanco
+                    onPressed: is_sync
+                        ? null // Deshabilita el botón si está subiendo
+                        : () => _showConfirmationDialog(context),
                   ),
           )
         ],
@@ -535,11 +539,13 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                   onTap: () => _removeImage(
                                                       index, field),
                                                   child: Container(
-                                                    decoration: const BoxDecoration(
+                                                    decoration:
+                                                        const BoxDecoration(
                                                       color: Colors.red,
                                                       shape: BoxShape.circle,
                                                     ),
-                                                    padding: const EdgeInsets.all(4),
+                                                    padding:
+                                                        const EdgeInsets.all(4),
                                                     child: const Icon(
                                                       Icons.close,
                                                       color: Colors.white,
@@ -557,11 +563,13 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                                       field.value['evidences']
                                                           [index]),
                                                   child: Container(
-                                                    decoration: const BoxDecoration(
+                                                    decoration:
+                                                        const BoxDecoration(
                                                       color: Colors.blue,
                                                       shape: BoxShape.circle,
                                                     ),
-                                                    padding: const EdgeInsets.all(4),
+                                                    padding:
+                                                        const EdgeInsets.all(4),
                                                     child: const Icon(
                                                       Icons.zoom_in,
                                                       color: Colors.white,

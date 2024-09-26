@@ -338,9 +338,11 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     setState(() {
       isSync = inspectionForm.isNotEmpty;
     });
-    print('*************************** isSync status ***************************');
+    print(
+        '*************************** isSync status ***************************');
     print(isSync);
-    print('*************************** isSync status ***************************');
+    print(
+        '*************************** isSync status ***************************');
   }
 
   @override
@@ -366,8 +368,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             print(_projects[index]);
             final projectName = _projects[index]['project_name'];
             final projectDescription = _projects[index]['description'];
-            final ctInspectionUuid = _projects[index]['ct_inspection_uuid']; // Recupera el UUID
-            final inspectionUuid = _projects[index]['inspection_uuid']; // Recupera el UUID
+            final ctInspectionUuid =
+                _projects[index]['ct_inspection_uuid']; // Recupera el UUID
+            final inspectionUuid =
+                _projects[index]['inspection_uuid']; // Recupera el UUID
             //
             return Card(
               shape: RoundedRectangleBorder(
@@ -379,23 +383,21 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 subtitle: Html(
                   data: projectDescription,
                 ),
-                trailing: _projects[index]['status_id'] == 6 && isSync == false
-                    ? Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.blue, // Color de fondo azul
-                          shape: BoxShape.circle, // Forma redondeada
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.cloud_sync,
-                              color: Colors.white), // Ícono con color blanco
-                          onPressed: () {
-                            // Acción al presionar el botón
-                            _syncWithProduction(
-                                inspectionUuid); // Llama a la función _sync
-                          },
-                        ),
-                      )
-                    : null,
+                trailing: Container(
+                  decoration: BoxDecoration(
+                    color: _projects[index]['status_id'] == 6 && isSync
+                        ? Colors.grey
+                        : Colors.blue, // Cambia color según estado
+                    shape: BoxShape.circle, // Forma redondeada
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.cloud_sync,
+                        color: Colors.white), // Ícono con color blanco
+                    onPressed: _projects[index]['status_id'] == 6 && isSync
+                        ? null // Deshabilita el botón si está subiendo
+                        : () => _syncWithProduction(inspectionUuid),
+                  ),
+                ),
                 onTap: () {
                   // Navega a la pantalla de inspección al hacer tap
                   Navigator.push(
