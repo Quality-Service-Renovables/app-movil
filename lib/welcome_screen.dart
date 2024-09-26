@@ -52,8 +52,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     if (response.statusCode == 200) {
       final responseData = json.decode(response.body);
-
-      print('Response: $responseData');
+      //print('Response: $responseData');
 
       if (responseData['data'] != null &&
           responseData['data']['status'] != null) {

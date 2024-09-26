@@ -32,7 +32,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   void initState() {
     super.initState();
     _projects = widget.projects;
-    print('Projects: $_projects');
+    //print('Projects: $_projects');
     _initializeSyncStates();
     print("-------> ✓ CARGA DE PROYECTOS OK <-------");
   }
@@ -76,8 +76,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       value['sub_sections'] = value['sub_sections'] ?? [];
       value['sub_sections'].forEach((subSection) {
         subSection['fields'].forEach((key, value) {
-          print('valor de subsection');
-          print(value);
           if (value['content']['inspection_form_comments'].isNotEmpty) {
             data.add({
               'ct_inspection_form_uuid': value['ct_inspection_form_uuid'],
@@ -239,10 +237,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     var responseData = await http.Response.fromStream(response);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      print('Success: ${responseData.body}');
+      print("-------> ✓ EVIDENCIAS ENVIADAS CORRECTAMENTE OK <-------");
     } else {
-      print(
-          'Response body: ${responseData.body}, Error: ${response.statusCode}');
+      print("-------> x ERROR AL ENVIAR EVIDENCIAS <-------");
+      print(responseData.body);
     }
   }
 
@@ -298,6 +296,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             backgroundColor: Colors.green, // Color verde
           ),
         );
+        print("-------> ✓ SINCRONIZACIÓN EXITOSA <-------");
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -305,7 +304,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             backgroundColor: Colors.red, // Color verde
           ),
         );
-        print('Error durante la sincronización: $e');
+        print("-------> x ERROR DURANTE LA SINCRONIZACIÓN <-------");
       }
     }
   }
@@ -342,20 +341,9 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       whereArgs: [inspectionUuid],
     );
 
-    print('Inspection form sync status');
-    print(inspectionForm);
-    print(inspectionForm.isNotEmpty);
-    print(inspectionUuid);
-    print('Inspection form sync status - end');
-
     setState(() {
       isSync = inspectionForm.isNotEmpty;
     });
-    print(
-        '*************************** isSync status ***************************');
-    print(isSync);
-    print(
-        '*************************** isSync status ***************************');
   }
 
   @override
@@ -377,8 +365,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           padding: const EdgeInsets.all(10),
           itemCount: _projects.length,
           itemBuilder: (context, index) {
-            print('project..................................................');
-            print(_projects[index]);
             final projectName = _projects[index]['project_name'];
             final projectDescription = _projects[index]['description'];
             final ctInspectionUuid =
