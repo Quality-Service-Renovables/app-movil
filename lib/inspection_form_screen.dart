@@ -52,8 +52,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       whereArgs: [widget.inspectionUuid],
     );
 
-    
-
     if (inspectionForm.isNotEmpty) {
       is_sync = inspectionForm.first['is_sync'] == 1 ? true : false;
       print("Entro a 1- _getFormFromDatabase");
@@ -91,8 +89,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     );
 
     final jsonResponse = json.decode(response.body);
-
-    print('get form inspection response: $jsonResponse');
 
     if (response.statusCode == 200) {
       final data = jsonResponse['data'];
@@ -173,11 +169,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     setState(() {
       _isUploading = true;
     });
-    //print("JSON FORM:");
-    //debugPrint(jsonEncode(_inspectionData), wrapWidth: 1024);
-    //final hasConnection = await checkInternetConnection();
 
-    //if (hasConnection) {
     final db = await DatabaseHelper().database;
     final now = DateTime.now().toIso8601String();
     final jsonData = jsonEncode(_inspectionData);
@@ -204,18 +196,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       _uploadIcon = Icons.save;
       _isUploading = false;
     });
-    //print('Registro guardado: $result');
-    print("Registro guardado: ");
-    debugPrint(jsonData, wrapWidth: 1024);
-    /*} else {
-      showErrorDialog(
-        context,
-        'QSR Checklist',
-        [
-          'Se requiere conexión a internet para sincronización de cambios.',
-        ],
-      );
-    }*/
+    print("----Registro guardado----");
+    //debugPrint(jsonData, wrapWidth: 1024);
   }
 
   void _showConfirmationDialog(BuildContext context) {
@@ -415,8 +397,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                       // Campos
                       Column(
                         children: fields.entries.map((field) {
-                          //print("FIELD...");
-                          //print(field);
                           // Crea un TextEditingController para cada campo
                           TextEditingController _controller =
                               TextEditingController();

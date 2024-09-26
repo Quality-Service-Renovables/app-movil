@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:quality_service/helpers.dart';
 import 'logout_service.dart'; // Importa el servicio de logout
 import 'package:flutter_html/flutter_html.dart';
 import 'inspection_form_screen.dart';
@@ -245,6 +246,17 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   }
 
   Future<void> _syncWithProduction(String inspectionUuid) async {
+    final hasConnection = await checkInternetConnection();
+    if (!hasConnection) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Parece que no tienes conexión a internet, por favor verifica tu conexión.'),
+          backgroundColor: Colors.red, // Color rojo
+        ),
+      );
+      return;
+    }
     // INICIO - Mostramos un mensaje de sincronización
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
