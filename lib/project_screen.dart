@@ -34,6 +34,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     _projects = widget.projects;
     print('Projects: $_projects');
     _initializeSyncStates();
+    print("-------> ✓ CARGA DE PROYECTOS OK <-------");
   }
 
   Future<void> _refreshProjects() async {

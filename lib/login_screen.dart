@@ -80,12 +80,15 @@ class _LoginScreenState extends State<LoginScreen> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', token);
 
+      print("-------> ✓ LOGIN OK <-------");
+
       // Redirigir a la pantalla de bienvenida
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const WelcomeScreen()),
       );
     } else {
+      print("-------> x LOGIN FALLIDO <-------");
       showDialog(
         context: context,
         builder: (BuildContext context) {

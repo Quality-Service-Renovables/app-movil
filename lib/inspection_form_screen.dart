@@ -136,7 +136,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
+      print("-------> ✓ CARGA DE FORMULARIO DESDE PROD OK <-------");
     } else {
+      print("-------> x CARGA DE FORMULARIO DESDE PROD FALLIDA <-------");
       showErrorDialog(
         context,
         'QSR no disponible',
@@ -149,16 +151,27 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   Future<void> _getFormFromDatabase(Database db) async {
-    final List<Map<String, dynamic>> maps = await db.query(
-      'inspection_forms',
-      columns: ['json_form'],
-      where: 'inspection_uuid = ?',
-      whereArgs: [widget.inspectionUuid],
-    );
-    setState(() {
-      _inspectionData = jsonDecode(maps.first['json_form']);
-      _isLoading = false;
-    });
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        'inspection_forms',
+        columns: ['json_form'],
+        where: 'inspection_uuid = ?',
+        whereArgs: [widget.inspectionUuid],
+      );
+      setState(() {
+        _inspectionData = jsonDecode(maps.first['json_form']);
+        _isLoading = false;
+      });
+      print("-------> ✓ CARGA DE FORMULARIO DESDE LOCAL OK <-------");
+    } catch (e) {
+      print("-------> x CARGA DE FORMULARIO DESDE LOCAL FALLIDA <-------");
+      print(e);
+      showErrorDialog(
+        context,
+        'Error de Conexión local',
+        ['Error al cargar el formulario.'],
+      );
+    }
   }
 
   Future<void> _refreshInspectionData() async {
@@ -166,38 +179,48 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   Future<void> _confirmChanges() async {
-    setState(() {
-      _isUploading = true;
-    });
+    try {
+      setState(() {
+        _isUploading = true;
+      });
 
-    final db = await DatabaseHelper().database;
-    final now = DateTime.now().toIso8601String();
-    final jsonData = jsonEncode(_inspectionData);
+      final db = await DatabaseHelper().database;
+      final now = DateTime.now().toIso8601String();
+      final jsonData = jsonEncode(_inspectionData);
 
-    await db.insert(
-      'inspection_forms',
-      {
-        'inspection_uuid': widget.inspectionUuid,
-        'json_form': jsonData,
-        'created_at': now,
-        'updated_at': now,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+      await db.insert(
+        'inspection_forms',
+        {
+          'inspection_uuid': widget.inspectionUuid,
+          'json_form': jsonData,
+          'created_at': now,
+          'updated_at': now,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
 
-    // Consulta el registro guardado para depuración
-    final List<Map<String, dynamic>> result = await db.query(
-      'inspection_forms',
-      where: 'inspection_uuid = ?',
-      whereArgs: [widget.inspectionUuid],
-    );
-    // Cambia el ícono a cloud_done
-    setState(() {
-      _uploadIcon = Icons.save;
-      _isUploading = false;
-    });
-    print("----Registro guardado----");
-    //debugPrint(jsonData, wrapWidth: 1024);
+      // Consulta el registro guardado para depuración
+      final List<Map<String, dynamic>> result = await db.query(
+        'inspection_forms',
+        where: 'inspection_uuid = ?',
+        whereArgs: [widget.inspectionUuid],
+      );
+      // Cambia el ícono a cloud_done
+      setState(() {
+        _uploadIcon = Icons.save;
+        _isUploading = false;
+      });
+      print("-------> ✓ GUARDADO DE FORMULARIO LOCAL OK <-------");
+      //debugPrint(jsonData, wrapWidth: 1024);
+    } catch (e) {
+      print("-------> x GUARDADO DE FORMULARIO LOCAL FALLIDA <-------");
+      print(e);
+      showErrorDialog(
+        context,
+        'Error de Conexión local',
+        ['Error al guardar el formulario.'],
+      );
+    }
   }
 
   void _showConfirmationDialog(BuildContext context) {
@@ -230,15 +253,26 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
 
   // Método para seleccionar múltiples imágenes desde la galería
   Future<void> _pickImages(field) async {
-    final List<XFile>? pickedFiles = await _picker.pickMultiImage();
+    try {
+      final List<XFile>? pickedFiles = await _picker.pickMultiImage();
 
-    if (pickedFiles != null) {
-      setState(() {
-        field.value['evidences'] ??= [];
-        field.value['evidences']
-            .addAll(pickedFiles.map((pickedFile) => pickedFile.path).toList());
-        _uploadIcon = Icons.save;
-      });
+      if (pickedFiles != null) {
+        setState(() {
+          field.value['evidences'] ??= [];
+          field.value['evidences'].addAll(
+              pickedFiles.map((pickedFile) => pickedFile.path).toList());
+          _uploadIcon = Icons.save;
+        });
+      }
+      print("-------> ✓ Imágenes seleccionadas <-------");
+    } catch (e) {
+      print("-------> x Error al seleccionar imágenes <-------");
+      print(e);
+      showErrorDialog(
+        context,
+        'Error al seleccionar imágenes',
+        ['No se pudieron seleccionar las imágenes.'],
+      );
     }
   }
 
@@ -255,17 +289,35 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           _uploadIcon = Icons.save;
         });
       }
+      print("-------> ✓ Imagen tomada <-------");
     } catch (e) {
-      print('Error al seleccionar imágenes: $e');
+      print("-------> x Error al tomar la foto <-------");
+      print(e);
+      showErrorDialog(
+        context,
+        'Error al tomar la foto',
+        ['No se pudo tomar la foto.'],
+      );
     }
   }
 
   // Método para eliminar una imagen seleccionada
   void _removeImage(int index, field) {
-    setState(() {
-      field.value['evidences'].removeAt(index);
-      _uploadIcon = Icons.save;
-    });
+    try {
+      setState(() {
+        field.value['evidences'].removeAt(index);
+        _uploadIcon = Icons.save;
+      });
+      print("-------> ✓ Imagen eliminada <-------");
+    } catch (e) {
+      print("-------> x Error al eliminar la imagen <-------");
+      print(e);
+      showErrorDialog(
+        context,
+        'Error al eliminar la imagen',
+        ['No se pudo eliminar la imagen.'],
+      );
+    }
   }
 
   // Método para mostrar la imagen en un modal
@@ -289,39 +341,51 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         },
       );
     } catch (e) {
-      print('Error al visualizar la imagen: $e');
+      print("-------> x Error al visualizar la imagen <-------");
+      print(e);
     }
   }
 
   // Método para obtener las imágenes de un campo que ya tiene imágenes de la base de datos
   Future<List<dynamic>> _getImagesFromField(field) async {
     final images = [];
-    if (field['content'] != null && field['content']['evidences'] != null) {
-      for (var image in field['content']['evidences']) {
-        String imageUrl =
-            "${Constants.apiEndpoint}/" + image['inspection_evidence'];
+    try {
+      if (field['content'] != null && field['content']['evidences'] != null) {
+        for (var image in field['content']['evidences']) {
+          String imageUrl =
+              "${Constants.apiEndpoint}/" + image['inspection_evidence'];
 
-        // Descargar la imagen
-        var response = await http.get(Uri.parse(imageUrl));
+          // Descargar la imagen
+          var response = await http.get(Uri.parse(imageUrl));
 
-        if (response.statusCode == 200) {
-          // Obtener la ruta local del directorio
-          Directory directory = await getApplicationDocumentsDirectory();
+          if (response.statusCode == 200) {
+            // Obtener la ruta local del directorio
+            Directory directory = await getApplicationDocumentsDirectory();
 
-          // Nombre del archivo basado en la URL
-          String fileName = path.basename(imageUrl);
+            // Nombre del archivo basado en la URL
+            String fileName = path.basename(imageUrl);
 
-          // Crear la ruta completa
-          String localPath = path.join(directory.path, fileName);
+            // Crear la ruta completa
+            String localPath = path.join(directory.path, fileName);
 
-          // Guardar la imagen localmente
-          File localFile = File(localPath);
-          await localFile.writeAsBytes(response.bodyBytes);
+            // Guardar la imagen localmente
+            File localFile = File(localPath);
+            await localFile.writeAsBytes(response.bodyBytes);
 
-          // Agregar la ruta local al array de imágenes
-          images.add(localPath);
+            // Agregar la ruta local al array de imágenes
+            images.add(localPath);
+          }
         }
       }
+      print("-------> ✓ Imágenes obtenidas correctamente <-------");
+    } catch (e) {
+      print("-------> x Error al obtener las imágenes <-------");
+      print(e);
+      showErrorDialog(
+        context,
+        'Error al obtener las imágenes',
+        ['No se pudieron obtener las imágenes.'],
+      );
     }
     return images;
   }

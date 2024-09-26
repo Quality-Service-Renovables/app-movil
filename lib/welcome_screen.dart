@@ -55,7 +55,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
       print('Response: $responseData');
 
-      if (responseData['data'] != null && responseData['data']['status'] != null) {
+      if (responseData['data'] != null &&
+          responseData['data']['status'] != null) {
         await db.insert(
           'sync',
           {
@@ -66,7 +67,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
+        print("-------> ✓ CARGA DE ESTADOS DE PROYECTOS OK <-------");
       } else {
+        print("-------> x CARGA DE ESTADOS DE PROYECTOS FALLIDA <-------");
         setState(() {
           _isLoading = false;
         });
@@ -134,7 +137,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => LogoutService.logout(context), // Utiliza el servicio de logout
+            onPressed: () =>
+                LogoutService.logout(context), // Utiliza el servicio de logout
           ),
         ],
       ),
