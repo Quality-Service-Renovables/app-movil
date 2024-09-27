@@ -39,21 +39,25 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     // Si existe conexión a internet activa, actualiza el formulario
     if (hasConnection) {
+      await _loadProfile();
       await _updateSyncTable(db);
     }
 
     await _getStatus(db);
   }
 
-  Future<void> _updateSyncTable(Database db) async {
+  Future<void> _loadProfile() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
     setState(() {
       profile['name'] = prefs.getString('name') ?? 'Nombre';
       profile['email'] = prefs.getString('email') ?? 'Email';
       profile['avatar'] = prefs.getString('avatar') ?? '';
     });
+  }
+
+  Future<void> _updateSyncTable(Database db) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
     final now = DateTime.now().toIso8601String();
 
@@ -160,9 +164,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CircleAvatar(
-                  radius: 40,
-                  backgroundImage: FileImage(File(profile['avatar'])), // Imagen de perfil
-                ),
+                    radius: 40,
+                    backgroundImage:
+                        FileImage(File(profile['avatar'])), // Imagen de perfil
+                  ),
                   Text(
                     profile['name'],
                     style: const TextStyle(
