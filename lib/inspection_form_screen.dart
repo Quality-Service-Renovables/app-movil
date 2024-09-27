@@ -171,7 +171,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   Future<void> _refreshInspectionData() async {
-    await _getFormInspection();
+    //await _getFormInspection();
   }
 
   Future<void> _confirmChanges() async {
@@ -409,11 +409,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       appBar: AppBar(
         title: const Text('Checklist'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () =>
-                LogoutService.logout(context), // Utiliza el servicio de logout
-          ),
           Container(
             margin: const EdgeInsets.only(left: 16.0, right: 10.0),
             decoration: BoxDecoration(

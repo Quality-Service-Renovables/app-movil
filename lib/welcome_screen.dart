@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'database_helper.dart';
@@ -18,6 +20,11 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   List<dynamic> _statusList = [];
   bool _isLoading = true;
+  Map<String, dynamic> profile = {
+    'name': 'Nombre', // 'name' es la clave, 'John Doe' es el valor
+    'email': 'Email', // 'age' es la clave, 30 es el valor
+    'avatar': ''
+  };
 
   @override
   void initState() {
@@ -41,6 +48,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Future<void> _updateSyncTable(Database db) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
+
+    setState(() {
+      profile['name'] = prefs.getString('name') ?? 'Nombre';
+      profile['email'] = prefs.getString('email') ?? 'Email';
+      profile['avatar'] = prefs.getString('avatar') ?? '';
+    });
+
     final now = DateTime.now().toIso8601String();
 
     final response = await http.get(
@@ -133,13 +147,57 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Estado de Proyectos'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () =>
-                LogoutService.logout(context), // Utiliza el servicio de logout
-          ),
-        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.red,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                  radius: 40,
+                  backgroundImage: FileImage(File(profile['avatar'])), // Imagen de perfil
+                ),
+                  Text(
+                    profile['name'],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    profile['email'],
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.home, color: Colors.red),
+              title: Text('Home'),
+              onTap: () {
+                Navigator.pop(context); // Cierra el Drawer
+                Navigator.pushNamed(context, '/welcome');
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.logout, color: Colors.red),
+              title: Text('Cerrar sesión'),
+              onTap: () =>
+                  LogoutService.logout(context) // Utiliza el servicio de logout
+              ,
+            ),
+          ],
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

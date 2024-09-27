@@ -12,6 +12,7 @@ class LogoutService {
     final token = prefs.getString('token');
 
     if (token != null) {
+      print("Cerrando sesión...");
       final response = await http.post(
         Uri.parse('${Constants.apiEndpoint}/api/session/logout'),
         headers: {

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'database_helper.dart';
 import 'welcome_screen.dart';
 import 'utils/constants.dart';
+import 'helpers.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,8 +15,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController(text: "jburto@qsr.mx");
-  final TextEditingController _passwordController = TextEditingController(text: "qsr.2024!");
+  final TextEditingController _emailController =
+      TextEditingController(text: "jburto@qsr.mx");
+  final TextEditingController _passwordController =
+      TextEditingController(text: "qsr.2024!");
   bool _isLoading = false;
 
   @override
@@ -30,7 +33,10 @@ class _LoginScreenState extends State<LoginScreen> {
     // Consulta para verificar que el token existe y que expired_at es null
     List<Map> result = await db.query(
       'sessions',
-      columns: ['token', 'expired_at'], // Incluimos 'expired_at' para depuración
+      columns: [
+        'token',
+        'expired_at'
+      ], // Incluimos 'expired_at' para depuración
       where: 'expired_at IS NULL',
     );
 
@@ -42,7 +48,6 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     }
   }
-
 
   Future<void> _login() async {
     setState(() {
@@ -60,27 +65,50 @@ class _LoginScreenState extends State<LoginScreen> {
       }),
     );
 
-    setState(() {
-      _isLoading = false;
-    });
-
     final Map<String, dynamic> responseData = json.decode(response.body);
 
     if (response.statusCode == 200 && responseData['status'] == 'ok') {
       final token = responseData['data'];
+
+      final profile = await http.get(
+        Uri.parse('${Constants.apiEndpoint}/api/profile/'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      //print('Profile: ${profile.body}');
+      final profileAux = json.decode(profile.body);
+      final name = profileAux['name'];
+      final email = profileAux['email'];
+      final avatar = await saveURLImageAndGetLocalPath(profileAux['image_profile']);
+      print("Name: $name");
+      print("Email: $email");
+      print("Avatar: $avatar");
+
       final db = await DatabaseHelper().database;
 
       // Insertar token en la base de datos
       await db.insert('sessions', {
         'token': token,
+        'name': name,
+        'email': email,
+        'avatar': avatar,
         'created_at': DateTime.now().toIso8601String(),
       });
 
       // Persistir el token en SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', token);
+      await prefs.setString('name', name);
+      await prefs.setString('email', email);
+      await prefs.setString('avatar', avatar);
 
       print("-------> ✓ LOGIN OK <-------");
+
+      setState(() {
+        _isLoading = false;
+      });
 
       // Redirigir a la pantalla de bienvenida
       Navigator.pushReplacement(
@@ -88,6 +116,9 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (context) => const WelcomeScreen()),
       );
     } else {
+      setState(() {
+        _isLoading = false;
+      });
       print("-------> x LOGIN FALLIDO <-------");
       showDialog(
         context: context,
@@ -162,21 +193,21 @@ class _LoginScreenState extends State<LoginScreen> {
               _isLoading
                   ? CircularProgressIndicator(color: Colors.red[900])
                   : ElevatedButton(
-                onPressed: _login,
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.grey[800], // Botón gris oscuro
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 50,
-                    vertical: 15,
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                child: const Text('Login'),
-              ),
+                      onPressed: _login,
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.grey[800], // Botón gris oscuro
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 50,
+                          vertical: 15,
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      child: const Text('Login'),
+                    ),
             ],
           ),
         ),
