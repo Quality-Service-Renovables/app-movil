@@ -25,6 +25,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     'email': 'Email', // 'age' es la clave, 30 es el valor
     'avatar': ''
   };
+  bool _isLoggingOut = false; // Estado para controlar el loading
 
   @override
   void initState() {
@@ -195,11 +196,32 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               },
             ),
             ListTile(
-              leading: Icon(Icons.logout, color: Colors.red),
+              leading: _isLoggingOut
+                  ? SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.0,
+                        color: Colors.red, // El color del indicador de carga
+                      ),
+                    )
+                  : Icon(Icons.logout, color: Colors.red),
               title: Text('Cerrar sesión'),
-              onTap: () =>
-                  LogoutService.logout(context) // Utiliza el servicio de logout
-              ,
+              onTap: _isLoggingOut
+                  ? null // Deshabilita el botón mientras se realiza el logout
+                  : () async {
+                      setState(() {
+                        _isLoggingOut = true; // Mostrar el preloader
+                      });
+
+                      // Llamar al servicio de logout
+                      await LogoutService.logout(context);
+
+                      // Cuando termine el logout, ocultar el preloader
+                      setState(() {
+                        _isLoggingOut = false;
+                      });
+                    },
             ),
           ],
         ),

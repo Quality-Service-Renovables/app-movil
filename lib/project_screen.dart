@@ -327,7 +327,9 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   Future<void> _initializeSyncStates() async {
     for (var project in _projects) {
       final inspectionUuid = project['inspection_uuid'];
-      await _getSyncState(inspectionUuid);
+      if (inspectionUuid != null) {
+        await _getSyncState(inspectionUuid);
+      }
     }
   }
 
@@ -351,13 +353,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () =>
-                LogoutService.logout(context), // Utiliza el servicio de logout
-          ),
-        ],
+        actions: [],
       ),
       body: RefreshIndicator(
         onRefresh: _refreshProjects,
@@ -371,7 +367,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 _projects[index]['ct_inspection_uuid']; // Recupera el UUID
             final inspectionUuid =
                 _projects[index]['inspection_uuid']; // Recupera el UUID
-            //
+            
             return Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
@@ -379,34 +375,69 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
               margin: const EdgeInsets.symmetric(vertical: 10.0),
               child: ListTile(
                 title: Text(projectName),
-                subtitle: Html(
-                  data: projectDescription,
-                ),
+                subtitle: projectDescription != null
+                    ? Html(
+                        data: projectDescription,
+                      )
+                    : null,
                 trailing: Container(
                   decoration: BoxDecoration(
-                    color: _projects[index]['status_id'] == 6 && isSync
+                    color: inspectionUuid == null ||
+                            (_projects[index]['status_id'] == 6 && isSync)
                         ? Colors.grey
                         : Colors.blue, // Cambia color según estado
                     shape: BoxShape.circle, // Forma redondeada
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.cloud_sync,
-                        color: Colors.white), // Ícono con color blanco
-                    onPressed: _projects[index]['status_id'] == 6 && isSync
+                    icon: const Icon(Icons.cloud_sync, color: Colors.white),
+                    onPressed: inspectionUuid == null ||
+                            (_projects[index]['status_id'] == 6 && isSync)
                         ? null // Deshabilita el botón si está subiendo
-                        : () => _syncWithProduction(inspectionUuid),
+                        : () async {
+                            bool? confirm = await showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text("Confirmación"),
+                                  content: Text(
+                                      "¿Estás seguro de que deseas sincronizar?\nUna vez sincronizado no se podrá editar la información."),
+                                  actions: [
+                                    TextButton(
+                                      child: Text("Cancelar"),
+                                      onPressed: () {
+                                        Navigator.of(context)
+                                            .pop(false); // Cancelar
+                                      },
+                                    ),
+                                    TextButton(
+                                      child: Text("Confirmar"),
+                                      onPressed: () {
+                                        Navigator.of(context)
+                                            .pop(true); // Confirmar
+                                      },
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                            if (confirm == true) {
+                              _syncWithProduction(
+                                  inspectionUuid); // Ejecutar acción si se confirma
+                            }
+                          },
                   ),
                 ),
                 onTap: () {
-                  // Navega a la pantalla de inspección al hacer tap
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => InspectionFormScreen(
-                          ctInspectionUuid: ctInspectionUuid,
-                          inspectionUuid: inspectionUuid),
-                    ),
-                  );
+                  inspectionUuid == null
+                      ? null
+                      : Navigator.push( // Navega a la pantalla de inspección al hacer tap
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => InspectionFormScreen(
+                                ctInspectionUuid: ctInspectionUuid,
+                                inspectionUuid: inspectionUuid),
+                          ),
+                        );
                 },
               ),
             );

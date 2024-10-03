@@ -16,15 +16,42 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController =
-      TextEditingController(text: "jburto@qsr.mx");
+      TextEditingController(text: "");
   final TextEditingController _passwordController =
-      TextEditingController(text: "qsr.2024!");
+      TextEditingController(text: "");
   bool _isLoading = false;
+  bool _obscureText = true; // Estado inicial, la contraseña está oculta
+  bool _rememberMe = true; // Estado inicial, recordar contraseña activado
 
   @override
   void initState() {
     super.initState();
     _checkForExistingToken();
+    _loadUserData(); // Cargar el usuario y la contraseña si están guardados
+  }
+
+  // Método para cargar los datos guardados
+  _loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _emailController.text = prefs.getString('email') ?? '';
+      _passwordController.text = prefs.getString('password') ?? '';
+      _rememberMe = prefs.getBool('rememberMe') ?? false;
+    });
+  }
+
+  // Método para guardar los datos del usuario
+  _saveUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (_rememberMe) {
+      prefs.setString('email', _emailController.text);
+      prefs.setString('password', _passwordController.text);
+      prefs.setBool('rememberMe', _rememberMe);
+    } else {
+      prefs.remove('email');
+      prefs.remove('password');
+      prefs.remove('rememberMe');
+    }
   }
 
   Future<void> _checkForExistingToken() async {
@@ -81,10 +108,11 @@ class _LoginScreenState extends State<LoginScreen> {
       final profileAux = json.decode(profile.body);
       final name = profileAux['name'];
       final email = profileAux['email'];
-      final avatar = await saveURLImageAndGetLocalPath(profileAux['image_profile']);
-      print("Name: $name");
-      print("Email: $email");
-      print("Avatar: $avatar");
+      final avatar =
+          await saveURLImageAndGetLocalPath(profileAux['image_profile']);
+      //print("Name: $name");
+      //print("Email: $email");
+      //print("Avatar: $avatar");
 
       final db = await DatabaseHelper().database;
 
@@ -103,6 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setString('name', name);
       await prefs.setString('email', email);
       await prefs.setString('avatar', avatar);
+      _saveUserData(); // Guardar los datos tras autenticarse
 
       print("-------> ✓ LOGIN OK <-------");
 
@@ -144,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Inicio de Sesión'),
+        title: const Text('Inicio de sesión'),
         foregroundColor: Colors.white,
         backgroundColor: Colors.red[900], // Rojo oscuro
       ),
@@ -156,13 +185,13 @@ class _LoginScreenState extends State<LoginScreen> {
             children: <Widget>[
               Image.asset(
                 'assets/img/qsr_logo.png',
-                height: 100,
+                height: 75,
               ),
               const SizedBox(height: 20),
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: 'Email',
+                  labelText: 'Correo',
                   labelStyle: TextStyle(color: Colors.red[900]),
                   border: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.red[900]!),
@@ -177,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _passwordController,
                 decoration: InputDecoration(
-                  labelText: 'Password',
+                  labelText: 'Contraseña',
                   labelStyle: TextStyle(color: Colors.red[900]),
                   border: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.red[900]!),
@@ -185,9 +214,34 @@ class _LoginScreenState extends State<LoginScreen> {
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.red[900]!),
                   ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureText ? Icons.visibility : Icons.visibility_off,
+                      color: Colors.red[900],
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureText = !_obscureText;
+                      });
+                    },
+                  ),
                 ),
-                obscureText: true,
+                obscureText: _obscureText,
                 cursorColor: Colors.red[900],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Checkbox(
+                    value: _rememberMe,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _rememberMe = value!;
+                      });
+                    },
+                  ),
+                  Text('Recordar contraseña'),
+                ],
               ),
               const SizedBox(height: 20),
               _isLoading
@@ -206,7 +260,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      child: const Text('Login'),
+                      child: const Text('Entrar'),
                     ),
             ],
           ),
