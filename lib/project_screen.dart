@@ -354,6 +354,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       appBar: AppBar(
         title: Text(widget.title),
         actions: [],
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.red[900], // Rojo oscuro
       ),
       body: RefreshIndicator(
         onRefresh: _refreshProjects,

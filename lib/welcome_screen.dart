@@ -152,6 +152,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Estado de Proyectos'),
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.red[900], // Rojo oscuro
       ),
       drawer: Drawer(
         child: ListView(
