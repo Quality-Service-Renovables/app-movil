@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:quality_service/database_helper.dart';
 import 'package:quality_service/project_screen.dart';
+
 import 'login_screen.dart';
 import 'welcome_screen.dart';
+import 'package:flutter/services.dart';
 
 void main() {
+  // Asegura que los bindings se inicialicen antes de ejecutar el resto del código
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Oculta la barra de estado en Android
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: [SystemUiOverlay.bottom]);
+
   runApp(MyApp());
 }
 
@@ -12,14 +19,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Quality Service',
+      title: 'QSR Eolic Inspection',
       theme: ThemeData(
         primarySwatch: Colors.red,
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => LoginScreen(),
-        '/welcome': (context) => WelcomeScreen(),
+        '/': (context) => const LoginScreen(),
+        '/welcome': (context) => const WelcomeScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/projects') {
