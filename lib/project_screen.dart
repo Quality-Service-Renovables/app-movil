@@ -34,7 +34,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     _projects = widget.projects;
     //print('Projects: $_projects');
     _initializeSyncStates();
-    print("-------> ✓ CARGA DE PROYECTOS OK <-------");
+    //print("-------> ✓ CARGA DE PROYECTOS OK <-------");
   }
 
   Future<void> _refreshProjects() async {
@@ -237,10 +237,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     var responseData = await http.Response.fromStream(response);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      print("-------> ✓ EVIDENCIAS ENVIADAS CORRECTAMENTE OK <-------");
+      //print("-------> ✓ EVIDENCIAS ENVIADAS CORRECTAMENTE OK <-------");
     } else {
-      print("-------> x ERROR AL ENVIAR EVIDENCIAS <-------");
-      print(responseData.body);
+      //print("-------> x ERROR AL ENVIAR EVIDENCIAS <-------");
+      //print(responseData.body);
     }
   }
 
@@ -296,7 +296,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             backgroundColor: Colors.green, // Color verde
           ),
         );
-        print("-------> ✓ SINCRONIZACIÓN EXITOSA <-------");
+        //print("-------> ✓ SINCRONIZACIÓN EXITOSA <-------");
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -304,7 +304,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             backgroundColor: Colors.red, // Color verde
           ),
         );
-        print("-------> x ERROR DURANTE LA SINCRONIZACIÓN <-------");
+        //print("-------> x ERROR DURANTE LA SINCRONIZACIÓN <-------");
       }
     }
   }

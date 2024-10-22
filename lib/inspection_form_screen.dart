@@ -42,7 +42,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   }
 
   Future<void> _getFormInspection() async {
-    print("inspection_uuid: " + widget.inspectionUuid);
+    //print("inspection_uuid: " + widget.inspectionUuid);
     final hasConnection = await checkInternetConnection();
     final db = await DatabaseHelper().database;
     final List<Map<String, dynamic>> inspectionForm = await db.query(
@@ -132,9 +132,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
-      print("-------> ✓ CARGA DE FORMULARIO DESDE PROD OK <-------");
+      //print("-------> ✓ CARGA DE FORMULARIO DESDE PROD OK <-------");
     } else {
-      print("-------> x CARGA DE FORMULARIO DESDE PROD FALLIDA <-------");
+      //print("-------> x CARGA DE FORMULARIO DESDE PROD FALLIDA <-------");
       showErrorDialog(
         context,
         'QSR no disponible',
@@ -158,10 +158,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         _inspectionData = jsonDecode(maps.first['json_form']);
         _isLoading = false;
       });
-      print("-------> ✓ CARGA DE FORMULARIO DESDE LOCAL OK <-------");
+      //print("-------> ✓ CARGA DE FORMULARIO DESDE LOCAL OK <-------");
     } catch (e) {
-      print("-------> x CARGA DE FORMULARIO DESDE LOCAL FALLIDA <-------");
-      print(e);
+      //print("-------> x CARGA DE FORMULARIO DESDE LOCAL FALLIDA <-------");
+      //print(e);
       showErrorDialog(
         context,
         'Error de Conexión local',
@@ -206,11 +206,11 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         _uploadIcon = Icons.save;
         _isUploading = false;
       });
-      print("-------> ✓ GUARDADO DE FORMULARIO LOCAL OK <-------");
+      //print("-------> ✓ GUARDADO DE FORMULARIO LOCAL OK <-------");
       //debugPrint(jsonData, wrapWidth: 1024);
     } catch (e) {
-      print("-------> x GUARDADO DE FORMULARIO LOCAL FALLIDA <-------");
-      print(e);
+      //print("-------> x GUARDADO DE FORMULARIO LOCAL FALLIDA <-------");
+      //print(e);
       showErrorDialog(
         context,
         'Error de Conexión local',
@@ -260,10 +260,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           _uploadIcon = Icons.save;
         });
       }
-      print("-------> ✓ Imágenes seleccionadas <-------");
+      //print("-------> ✓ Imágenes seleccionadas <-------");
     } catch (e) {
-      print("-------> x Error al seleccionar imágenes <-------");
-      print(e);
+      //print("-------> x Error al seleccionar imágenes <-------");
+      //print(e);
       showErrorDialog(
         context,
         'Error al seleccionar imágenes',
@@ -285,10 +285,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           _uploadIcon = Icons.save;
         });
       }
-      print("-------> ✓ Imagen tomada <-------");
+      //print("-------> ✓ Imagen tomada <-------");
     } catch (e) {
-      print("-------> x Error al tomar la foto <-------");
-      print(e);
+      //print("-------> x Error al tomar la foto <-------");
+      //print(e);
       showErrorDialog(
         context,
         'Error al tomar la foto',
@@ -304,10 +304,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         field.value['evidences'].removeAt(index);
         _uploadIcon = Icons.save;
       });
-      print("-------> ✓ Imagen eliminada <-------");
+      //print("-------> ✓ Imagen eliminada <-------");
     } catch (e) {
-      print("-------> x Error al eliminar la imagen <-------");
-      print(e);
+      //print("-------> x Error al eliminar la imagen <-------");
+      //print(e);
       showErrorDialog(
         context,
         'Error al eliminar la imagen',
@@ -337,8 +337,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         },
       );
     } catch (e) {
-      print("-------> x Error al visualizar la imagen <-------");
-      print(e);
+      //print("-------> x Error al visualizar la imagen <-------");
+      //print(e);
     }
   }
 
@@ -373,10 +373,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           }
         }
       }
-      print("-------> ✓ Imágenes obtenidas correctamente <-------");
+      //print("-------> ✓ Imágenes obtenidas correctamente <-------");
     } catch (e) {
-      print("-------> x Error al obtener las imágenes <-------");
-      print(e);
+      //print("-------> x Error al obtener las imágenes <-------");
+      //print(e);
       showErrorDialog(
         context,
         'Error al obtener las imágenes',
