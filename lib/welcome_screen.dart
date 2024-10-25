@@ -85,9 +85,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
-        print("-------> ✓ CARGA DE ESTADOS DE PROYECTOS OK <-------");
+        //print("-------> ✓ CARGA DE ESTADOS DE PROYECTOS OK <-------");
       } else {
-        print("-------> x CARGA DE ESTADOS DE PROYECTOS FALLIDA <-------");
+        //print("-------> x CARGA DE ESTADOS DE PROYECTOS FALLIDA <-------");
         setState(() {
           _isLoading = false;
         });
