@@ -81,80 +81,104 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
 
-    final response = await http.post(
-      Uri.parse('${Constants.apiEndpoint}/api/session/login'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'email': _emailController.text,
-        'password': _passwordController.text,
-      }),
-    );
-
-    final Map<String, dynamic> responseData = json.decode(response.body);
-
-    if (response.statusCode == 200 && responseData['status'] == 'ok') {
-      final token = responseData['data'];
-
-      final profile = await http.get(
-        Uri.parse('${Constants.apiEndpoint}/api/profile/'),
-        headers: {
-          'Authorization': 'Bearer $token',
+    try {
+      final response = await http.post(
+        Uri.parse('${Constants.apiEndpoint}/api/session/login'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
         },
+        body: jsonEncode(<String, String>{
+          'email': _emailController.text,
+          'password': _passwordController.text,
+        }),
       );
 
-      //print('Profile: ${profile.body}');
-      final profileAux = json.decode(profile.body);
-      final name = profileAux['name'];
-      final email = profileAux['email'];
-      final avatar =
-          await saveURLImageAndGetLocalPath(profileAux['image_profile']);
-      //print("Name: $name");
-      //print("Email: $email");
-      //print("Avatar: $avatar");
+      final Map<String, dynamic> responseData = json.decode(response.body);
 
-      final db = await DatabaseHelper().database;
+      if (response.statusCode == 200 && responseData['status'] == 'ok') {
+        final token = responseData['data'];
 
-      // Insertar token en la base de datos
-      await db.insert('sessions', {
-        'token': token,
-        'name': name,
-        'email': email,
-        'avatar': avatar,
-        'created_at': DateTime.now().toIso8601String(),
-      });
+        final profile = await http.get(
+          Uri.parse('${Constants.apiEndpoint}/api/profile/'),
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        );
 
-      // Persistir el token en SharedPreferences
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', token);
-      await prefs.setString('name', name);
-      await prefs.setString('email', email);
-      await prefs.setString('avatar', avatar);
-      _saveUserData(); // Guardar los datos tras autenticarse
+        //print('Profile: ${profile.body}');
+        final profileAux = json.decode(profile.body);
+        final name = profileAux['name'];
+        final email = profileAux['email'];
+        final avatar =
+            await saveURLImageAndGetLocalPath(profileAux['image_profile']);
+        //print("Name: $name");
+        //print("Email: $email");
+        //print("Avatar: $avatar");
 
-      //print("-------> ✓ LOGIN OK <-------");
+        final db = await DatabaseHelper().database;
 
+        // Insertar token en la base de datos
+        await db.insert('sessions', {
+          'token': token,
+          'name': name,
+          'email': email,
+          'avatar': avatar,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+
+        // Persistir el token en SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', token);
+        await prefs.setString('name', name);
+        await prefs.setString('email', email);
+        await prefs.setString('avatar', avatar);
+        _saveUserData(); // Guardar los datos tras autenticarse
+
+        print("-------> ✓ LOGIN OK <-------");
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        // Redirigir a la pantalla de bienvenida
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+        );
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+        print("-------> x LOGIN FALLIDO <-------");
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Error de inicio de sesión'),
+              content: Text(responseData['message'] ?? 'Error desconocido'),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
+    } catch (e) {
       setState(() {
         _isLoading = false;
       });
-
-      // Redirigir a la pantalla de bienvenida
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-      );
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
-      //print("-------> x LOGIN FALLIDO <-------");
+      print("-------> x ERROR DESCONOCIDO <-------");
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('Error de inicio de sesión'),
-            content: Text(responseData['message'] ?? 'Error desconocido'),
+            title: const Text('No fue posible iniciar sesión'),
+            content: const Text('Por favor, verifica tu conexión a internet o revisa tus credenciales.'),
             actions: <Widget>[
               TextButton(
                 child: const Text('OK'),
