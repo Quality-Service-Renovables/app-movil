@@ -134,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setString('avatar', avatar);
         _saveUserData(); // Guardar los datos tras autenticarse
 
-        print("-------> ✓ LOGIN OK <-------");
+        //print("-------> ✓ LOGIN OK <-------");
 
         setState(() {
           _isLoading = false;
@@ -149,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() {
           _isLoading = false;
         });
-        print("-------> x LOGIN FALLIDO <-------");
+        //print("-------> x LOGIN FALLIDO <-------");
         showDialog(
           context: context,
           builder: (BuildContext context) {
