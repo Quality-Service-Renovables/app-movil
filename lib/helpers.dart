@@ -3,34 +3,29 @@ import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'utils/constants.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'dart:io';
 
 Future<bool> checkInternetConnection() async {
-  // Primero, verifica si el dispositivo está conectado a una red.
+  // Verifica la conectividad de red
   final connectivityResult = await Connectivity().checkConnectivity();
 
   if (connectivityResult != ConnectivityResult.none) {
-    // Si está conectado a una red, realiza una solicitud HTTP a un servidor confiable.
+    // Intenta realizar una solicitud HTTP
     try {
       final response = await http
           .get(Uri.parse("https://www.google.com"))
           .timeout(const Duration(seconds: 5));
 
-      // Si la solicitud es exitosa y el código de estado es 200, hay acceso a Internet.
-      if (response.statusCode == 200) {
-        return true;
-      } else {
-        return false;
-      }
+      // Verifica si la respuesta fue exitosa
+      return response.statusCode == 200;
     } catch (e) {
-      // Si ocurre algún error (por ejemplo, timeout), se considera que no hay acceso a Internet.
+      // Si ocurre un error, no hay conexión a Internet
       return false;
     }
   } else {
-    // Si no está conectado a ninguna red, devuelve false.
+    // No hay conectividad
     return false;
   }
 }

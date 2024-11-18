@@ -172,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _isLoading = false;
       });
-      print("-------> x ERROR DESCONOCIDO <-------");
+      //print("-------> x ERROR DESCONOCIDO <-------");
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -264,7 +264,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       });
                     },
                   ),
-                  Text('Recordar contraseña'),
+                  const Text('Recordar contraseña'),
                 ],
               ),
               const SizedBox(height: 20),

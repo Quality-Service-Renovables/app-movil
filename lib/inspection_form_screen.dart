@@ -11,7 +11,6 @@ import 'package:sqflite/sqflite.dart';
 
 import 'database_helper.dart';
 import 'helpers.dart';
-import 'logout_service.dart'; // Importa el servicio de logout
 import 'utils/constants.dart';
 
 class InspectionFormScreen extends StatefulWidget {
@@ -33,7 +32,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
   IconData _uploadIcon = Icons.save_as;
-  bool is_sync = false;
+  bool isSync = false;
 
   @override
   void initState() {
@@ -53,7 +52,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     );
 
     if (inspectionForm.isNotEmpty) {
-      is_sync = inspectionForm.first['is_sync'] == 1 ? true : false;
+      isSync = inspectionForm.first['is_sync'] == 1 ? true : false;
       await _getFormFromDatabase(db);
     } else if ((inspectionForm.isEmpty && hasConnection)) {
       await _updateFormInspection(db);
@@ -76,9 +75,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     final token = prefs.getString('token');
     final response = await http.get(
       Uri.parse(
-          '${Constants.apiEndpoint}/api/inspection/forms/get-form-inspection/' +
-              widget.inspectionUuid +
-              '?in_process=true'),
+          '${Constants.apiEndpoint}/api/inspection/forms/get-form-inspection/${widget.inspectionUuid}?in_process=true'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -195,12 +192,6 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
-      // Consulta el registro guardado para depuración
-      final List<Map<String, dynamic>> result = await db.query(
-        'inspection_forms',
-        where: 'inspection_uuid = ?',
-        whereArgs: [widget.inspectionUuid],
-      );
       // Cambia el ícono a cloud_done
       setState(() {
         _uploadIcon = Icons.save;
@@ -250,17 +241,15 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   // Método para seleccionar múltiples imágenes desde la galería
   Future<void> _pickImages(field) async {
     try {
-      final List<XFile>? pickedFiles = await _picker.pickMultiImage();
+      final List<XFile> pickedFiles = await _picker.pickMultiImage();
 
-      if (pickedFiles != null) {
-        setState(() {
-          field.value['evidences'] ??= [];
-          field.value['evidences'].addAll(
-              pickedFiles.map((pickedFile) => pickedFile.path).toList());
-          _uploadIcon = Icons.save;
-        });
-      }
-      //print("-------> ✓ Imágenes seleccionadas <-------");
+      setState(() {
+        field.value['evidences'] ??= [];
+        field.value['evidences'].addAll(
+            pickedFiles.map((pickedFile) => pickedFile.path).toList());
+        _uploadIcon = Icons.save;
+      });
+          //print("-------> ✓ Imágenes seleccionadas <-------");
     } catch (e) {
       //print("-------> x Error al seleccionar imágenes <-------");
       //print(e);
@@ -349,7 +338,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       if (field['content'] != null && field['content']['evidences'] != null) {
         for (var image in field['content']['evidences']) {
           String imageUrl =
-              "${Constants.apiEndpoint}/" + image['inspection_evidence'];
+              "${Constants.apiEndpoint}/${image['inspection_evidence']}";
 
           // Descargar la imagen
           var response = await http.get(Uri.parse(imageUrl));
@@ -412,7 +401,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           Container(
             margin: const EdgeInsets.only(left: 16.0, right: 10.0),
             decoration: BoxDecoration(
-              color: is_sync
+              color: isSync
                   ? Colors.grey
                   : Colors.blue, // Cambia color según estado
               shape: BoxShape.circle,
@@ -422,7 +411,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                 : IconButton(
                     icon:
                         Icon(_uploadIcon, color: Colors.white), // Icono blanco
-                    onPressed: is_sync
+                    onPressed: isSync
                         ? null // Deshabilita el botón si está subiendo
                         : () => _showConfirmationDialog(context),
                   ),
@@ -453,11 +442,11 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                       Column(
                         children: fields.entries.map((field) {
                           // Crea un TextEditingController para cada campo
-                          TextEditingController _controller =
+                          TextEditingController controller =
                               TextEditingController();
 
                           // Asigna el valor del result actual al controlador
-                          _controller.text = field.value['content']
+                          controller.text = field.value['content']
                                   ['inspection_form_comments'] ??
                               '';
 
@@ -475,7 +464,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                 margin:
                                     const EdgeInsets.only(left: 16, right: 16),
                                 child: TextField(
-                                  controller: _controller,
+                                  controller: controller,
                                   decoration: InputDecoration(
                                     labelText: "Comentarios",
                                     labelStyle:
@@ -637,10 +626,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                 Column(
                                   children: fieldsSub.entries.map((fieldSub) {
                                     // Crea un TextEditingController para cada campo
-                                    TextEditingController _controllerSub =
+                                    TextEditingController controllerSub =
                                         TextEditingController();
                                     // Asigna el valor del result actual al controlador
-                                    _controllerSub.text =
+                                    controllerSub.text =
                                         fieldSub.value['content']
                                                 ['inspection_form_comments'] ??
                                             '';
@@ -664,7 +653,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                                             right: 16,
                                           ),
                                           child: TextField(
-                                            controller: _controllerSub,
+                                            controller: controllerSub,
                                             decoration: InputDecoration(
                                               labelText: "Comentarios",
                                               labelStyle: TextStyle(

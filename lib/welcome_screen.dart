@@ -160,7 +160,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.red,
               ),
               child: Column(
@@ -190,8 +190,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               ),
             ),
             ListTile(
-              leading: Icon(Icons.home, color: Colors.red),
-              title: Text('Home'),
+              leading: const Icon(Icons.home, color: Colors.red),
+              title: const Text('Home'),
               onTap: () {
                 Navigator.pop(context); // Cierra el Drawer
                 Navigator.pushNamed(context, '/welcome');
@@ -199,7 +199,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             ),
             ListTile(
               leading: _isLoggingOut
-                  ? SizedBox(
+                  ? const SizedBox(
                       width: 24,
                       height: 24,
                       child: CircularProgressIndicator(
@@ -207,8 +207,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         color: Colors.red, // El color del indicador de carga
                       ),
                     )
-                  : Icon(Icons.logout, color: Colors.red),
-              title: Text('Cerrar sesión'),
+                  : const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Cerrar sesión'),
               onTap: _isLoggingOut
                   ? null // Deshabilita el botón mientras se realiza el logout
                   : () async {

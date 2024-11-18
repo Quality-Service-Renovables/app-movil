@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:quality_service/helpers.dart';
-import 'logout_service.dart'; // Importa el servicio de logout
 import 'package:flutter_html/flutter_html.dart';
 import 'inspection_form_screen.dart';
 import 'database_helper.dart';
@@ -233,9 +232,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     // Se envía la solicitud
     var response = await request.send();
 
-    // Obtenemos la respuesta detallada
-    var responseData = await http.Response.fromStream(response);
-
     if (response.statusCode == 200 || response.statusCode == 201) {
       //print("-------> ✓ EVIDENCIAS ENVIADAS CORRECTAMENTE OK <-------");
     } else {
@@ -353,7 +349,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
-        actions: [],
+        actions: const [],
         foregroundColor: Colors.white,
         backgroundColor: Colors.red[900], // Rojo oscuro
       ),
@@ -400,19 +396,19 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                               context: context,
                               builder: (BuildContext context) {
                                 return AlertDialog(
-                                  title: Text("Confirmación"),
-                                  content: Text(
+                                  title: const Text("Confirmación"),
+                                  content: const Text(
                                       "¿Estás seguro de que deseas sincronizar?\nUna vez sincronizado no se podrá editar la información."),
                                   actions: [
                                     TextButton(
-                                      child: Text("Cancelar"),
+                                      child: const Text("Cancelar"),
                                       onPressed: () {
                                         Navigator.of(context)
                                             .pop(false); // Cancelar
                                       },
                                     ),
                                     TextButton(
-                                      child: Text("Confirmar"),
+                                      child: const Text("Confirmar"),
                                       onPressed: () {
                                         Navigator.of(context)
                                             .pop(true); // Confirmar
