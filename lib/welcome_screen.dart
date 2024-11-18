@@ -151,7 +151,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Estado de Proyectos'),
+        title: const Text('Proyectos'),
         foregroundColor: Colors.white,
         backgroundColor: Colors.red[900], // Rojo oscuro
       ),
