@@ -1,6 +1,6 @@
 # quality_service
 
-Quality Services Renovables
+QSR Solutions
 
 ## Getting Started
 
